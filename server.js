@@ -10,7 +10,7 @@ const shutdown = require("./controllers/shutdown");
 const port = process.env.PORT || 3000;
 const server = express();
 
-app.set('trust proxy', 1);
+server.set('trust proxy', 1);
 
 server.use(helmet());
 server.use(cors());
