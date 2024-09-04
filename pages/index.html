@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>seismologos.online</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #666;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #fff;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        code {
+            background-color: #eaeaea;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to the seismologos.onine server</h1>
+    <p>This server is used to host JSON data for seismologos.gr</p>
+    <p>This server is built using <strong>Express</strong> and uses a <strong>MongoDB</strong> database. It is hosted by <strong>Render</strong>.</p>
+    <h2>Available Endpoints and Routes</h2>
+    <ul>
+        <li>
+            <code>Reports</code><br><br>
+            <ul>
+                <li>
+                    <code>GET /reports</code> - Retrieve a list of all reports, paginated.
+                </li>
+                <li>
+                    <code>GET /reports/:id</code> - Retrieve a specific report by its ID.
+                </li>
+                <li>
+                    <code>POST /reports</code> - Create a new report.
+                </li>
+                <li>
+                    <code>PATCH /reports/:id</code> - Update an existing report by its ID.
+                </li>
+                <li>
+                    <code>DELETE /reports/:id</code> - Delete a report by its ID.
+                </li>
+            </ul>
+        </li>
+    </ul>
+    <p>Feel free to explore the API endpoints listed above. Postman recommended.</p>
+</body>
+</html>
