@@ -10,5 +10,6 @@ router.get("/:id", validateIdParam, handleValidationErrors, reportsController.ge
 router.post("/", validateReport, handleValidationErrors, reportsController.createReport);
 router.patch("/:id", validateIdParam, validateUpdate, handleValidationErrors, reportsController.updateReport);
 router.delete("/:id", validateIdParam, handleValidationErrors, reportsController.deleteReport);
+router.post("/:id/revive", validateIdParam, handleValidationErrors, reportsController.reviveReport); 
 
 module.exports = router;
