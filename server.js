@@ -10,6 +10,11 @@ const shutdown = require("./controllers/shutdown");
 const port = process.env.PORT || 3000;
 const server = express();
 
+server.use(cors({
+  origin: 'https://seismologos.netlify.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
+
 server.set('trust proxy', 1);
 
 server.use(helmet());
@@ -17,11 +22,6 @@ server.use(helmet());
 server.use(express.json());
 
 server.use(limiter);
-
-server.use(cors({
-  origin: 'https://seismologos.netlify.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-}));
 
 dbConnect((err, database) => {
   if (!err) {
