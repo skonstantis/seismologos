@@ -13,9 +13,14 @@ const server = express();
 server.set('trust proxy', 1);
 
 server.use(helmet());
-server.use(cors());
 server.use(express.json());
 server.use(limiter);
+
+server.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 dbConnect((err, database) => {
   if (!err) {
