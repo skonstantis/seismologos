@@ -10,7 +10,7 @@ const shutdown = require("./controllers/shutdown");
 const port = process.env.PORT || 3000;
 const server = express();
 
-app.use(cors({
+server.use(cors({
   origin: 'https://seismologos.netlify.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept'],
