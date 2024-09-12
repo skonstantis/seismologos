@@ -15,6 +15,8 @@ server.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
 
+server.options('*', cors());
+
 server.set('trust proxy', 1);
 
 server.use(helmet());
