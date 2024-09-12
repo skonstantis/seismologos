@@ -5,7 +5,7 @@ const cors = require("cors");
 const { logger } = require("./config/logger");
 const { limiter } = require("./config/rateLimiter");
 const routes = require("./routes");
-const shutdown = require("./controllers/shutdown"); 
+const shutdown = require("./controllers/shutdown");
 
 const port = process.env.PORT || 3000;
 const server = express();
@@ -13,13 +13,14 @@ const server = express();
 server.set('trust proxy', 1);
 
 server.use(helmet());
+
 server.use(express.json());
+
 server.use(limiter);
 
 server.use(cors({
   origin: 'https://seismologos.netlify.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
 
 dbConnect((err, database) => {
