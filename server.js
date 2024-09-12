@@ -17,7 +17,7 @@ server.use(express.json());
 server.use(limiter);
 
 server.use(cors({
-  origin: '*',
+  origin: 'https://seismologos.netlify.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
