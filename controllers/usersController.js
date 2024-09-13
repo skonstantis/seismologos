@@ -27,8 +27,8 @@ const getUserById = async (req, res) => {
 
   try {
     const doc = await db.collection("users").findOne(
-              { _id: new ObjectId(id) }, 
-              { projection: { password: 0 } }
+      { _id: new ObjectId(id) }, 
+      { projection: { password: 0 } }
     );
     if (!doc) {
       res.status(404).json({ error: "NOT FOUND: No report found with such id" });
@@ -49,6 +49,11 @@ const createUser = async (req, res) => {
   user.created = now;
 
   try {
+    const existingUser = await db.collection('users').findOne({ username: user.username });
+    if (existingUser) {
+      return res.status(400).json({ error: 'ERROR: Username already exists' });
+    }
+
     const hashedPassword = await bcrypt.hash(user.password, 10);
     user.password = hashedPassword;
 
