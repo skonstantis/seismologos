@@ -8,7 +8,7 @@ const shutdown = async () => {
     logger.info("Database connection closed.");
     process.exit(0);
   } catch (err) {
-    logger.error("Error closing database connection:", err);
+    logger.error("ERROR: Couldn't close database connection:", err);
     process.exit(1);
   }
 };
