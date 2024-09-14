@@ -19,8 +19,6 @@ const validateUser = async (req, res) => {
         errors = errors.filter(error => error.path !== "username");
     }
 
-    console.log(errors);
-
     if (errors.length > 0) {
       return res.status(400).json({ errors });
     }
@@ -28,7 +26,7 @@ const validateUser = async (req, res) => {
     res.status(200).json([]);
   } catch (err) {
     logger.error('DATABASE ERROR:', err);
-    res.status(500).json({ msg: 'ERROR: Could not validate document' });
+    res.status(500).json({ msg: 'DATABASE ERROR: Could not validate document' });
   }
 };
 

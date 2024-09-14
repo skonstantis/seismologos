@@ -17,7 +17,7 @@ const getUsers = async (req, res) => {
     res.status(200).json(elements);
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    res.status(500).json({ msg: 'ERROR: Could not fetch documents' });
+    res.status(500).json({ msg: 'DATABASE ERROR: Could not fetch documents' });
   }
 };
 
@@ -37,7 +37,7 @@ const getUserById = async (req, res) => {
     }
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    res.status(500).json({ msg: 'ERROR: Could not fetch document'});
+    res.status(500).json({ msg: 'DATABASE ERROR: Could not fetch document'});
   }
 };
 
@@ -52,7 +52,7 @@ const createUser = async (req, res) => {
   try {
     const existingUser = await db.collection('users').findOne({ username: user.username });
     if (existingUser) {
-      errors.push({msg: 'ERROR: Username already exists'});
+      errors.push({msg: 'Το όνομα χρήστη ' + user.username + " χρησιμοποιείται ήδη"});
     }
 
     if (errors.length > 0) {
@@ -66,7 +66,7 @@ const createUser = async (req, res) => {
     res.status(201).json(result);
   } catch (err) {
     logger.error('DATABASE ERROR:', err);
-    res.status(500).json({ errors: ['ERROR: Could not create document'] });
+    res.status(500).json({ errors: ['DATABASE ERROR: Could not create document'] });
   }
 };
 
@@ -75,25 +75,20 @@ const updateUser = async (req, res) => {
   const db = req.app.locals.db;
   const { currentPassword, ...updates } = req.body;
   const id = req.params.id;
-  const errors = req.validationErrors || [];
 
   if (Object.keys(updates).length === 0) {
-    errors.push({ msg: 'ERROR: No update fields provided'});
+    return res.status(400).json({ msg: 'ERROR: No update fields provided'});
   }
   
   if (!currentPassword) {
-    errors.push({ msg: 'ERROR: Current password must be provided'});
-  }
-
-  if (errors.length > 0) {
-    return res.status(400).json({ errors });
+    return res.status(400).json({ msg: 'ERROR: Current password must be provided'});
   }
 
   try {
     const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
 
     if (!user) {
-      return res.status(404).json({ msg: 'NOT FOUND: No user found with such id'});
+      return res.status(404).json({ msg: 'ERROR: No user found with such id'});
     }
 
     const passwordMatch = await bcrypt.compare(currentPassword, user.password);
@@ -113,7 +108,7 @@ const updateUser = async (req, res) => {
     res.status(200).json(result);
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    res.status(500).json({ msg: 'ERROR: Could not update document'});
+    res.status(500).json({ msg: 'DATABASE ERROR: Could not update document'});
   }
 };
 
@@ -121,21 +116,16 @@ const deleteUser = async (req, res) => {
   const db = req.app.locals.db;
   const { currentPassword } = req.body;
   const id = req.params.id;
-  const errors = req.validationErrors || [];
 
   if (!currentPassword) {
-    errors.push({ msg: 'ERROR: Current password must be provided'});
-  }
-
-  if (errors.length > 0) {
-    return res.status(400).json({ errors });
+    return res.status(400).json({ msg: 'ERROR: Current password must be provided'});
   }
 
   try {
     const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
 
     if (!user) {
-      return res.status(404).json({ msg: 'NOT FOUND: No user found with such id'});
+      return res.status(404).json({ msg: 'ERROR: No user found with such id'});
     }
 
     const passwordMatch = await bcrypt.compare(currentPassword, user.password);
