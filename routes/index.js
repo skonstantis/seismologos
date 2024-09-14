@@ -1,6 +1,7 @@
 const express = require("express");
 const reportsRoutes = require("./reports");
 const usersRoutes = require("./users");
+const validateRoutes = require("./validate");
 const path = require("path");
 
 const router = express.Router();
@@ -12,5 +13,7 @@ router.get("/", (req, res) => {
 router.use("/reports", reportsRoutes);
 
 router.use("/users", usersRoutes);
+
+router.use("/validate", validateRoutes);
 
 module.exports = router;
