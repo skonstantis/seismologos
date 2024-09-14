@@ -8,8 +8,7 @@ const validateUser = async (req, res) => {
   try {
     const existingUser = await db.collection('users').findOne({ username: user.username });
     if (existingUser) {
-      if(username != '')
-        errors.push({ msg: 'ERROR: Username already exists'});
+      errors.push({ msg: 'ERROR: Username already exists'});
     }
 
     if (errors.length > 0) {
