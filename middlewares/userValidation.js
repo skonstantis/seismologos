@@ -7,9 +7,9 @@ const validateUser = [
 ];
 
 const validateUserUpdate = [
-    body('username').optional().isString().isLength({ max: 20 }).withMessage('ERROR: Username must be a string with a maximum length of 20 characters'),
-    body('password').optional().isString().isLength({ max: 20 }).withMessage('ERROR: Password must be a string with a maximum length of 20 characters')
-  ];
+  body('username').optional().isString().isLength({ max: 20 }).withMessage('ERROR: Username must be a string with a maximum length of 20 characters'),
+  body('password').optional().isString().isLength({ max: 20 }).withMessage('ERROR: Password must be a string with a maximum length of 20 characters')
+];
 
 const validateUserIdParam = [
   param('id').custom(value => ObjectId.isValid(value)).withMessage('ERROR: Invalid parameter: id')

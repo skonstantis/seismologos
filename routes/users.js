@@ -25,6 +25,13 @@ router.post(
   usersController.createUser
 );
 
+router.post(
+  "/validate",
+  validateUser,
+  handleValidationErrors,
+  usersController.validateNewUser
+);
+
 router.patch(
   "/:id",
   validateUserIdParam,

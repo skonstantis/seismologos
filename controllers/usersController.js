@@ -6,6 +6,7 @@ const getUsers = async (req, res) => {
   const db = req.app.locals.db;
   const page = parseInt(req.query.p) || 0;
   const elementsPerPage = 10;
+  const errors = req.validationErrors || [];
 
   try {
     const elements = await db.collection("users")
@@ -17,33 +18,39 @@ const getUsers = async (req, res) => {
     res.status(200).json(elements);
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    res.status(500).json({ error: "ERROR: Could not fetch documents" });
+    errors.push({ msg: 'ERROR: Could not fetch documents', param: '', location: 'internal' });
+    res.status(500).json({ errors });
   }
 };
 
 const getUserById = async (req, res) => {
   const db = req.app.locals.db;
   const id = req.params.id;
+  const errors = req.validationErrors || [];
 
   try {
     const doc = await db.collection("users").findOne(
-      { _id: new ObjectId(id) }, 
+      { _id: new ObjectId(id) },
       { projection: { password: 0 } }
     );
     if (!doc) {
-      res.status(404).json({ error: "NOT FOUND: No report found with such id" });
+      errors.push({ msg: 'NOT FOUND: No report found with such id', param: 'id', location: 'params' });
+      return res.status(404).json({ errors });
     } else {
       res.status(200).json(doc);
     }
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    res.status(500).json({ error: "ERROR: Could not fetch document" });
+    errors.push({ msg: 'ERROR: Could not fetch document', param: '', location: 'internal' });
+    res.status(500).json({ errors });
   }
 };
+
 
 const createUser = async (req, res) => {
   const db = req.app.locals.db;
   const user = req.body;
+  const errors = [];
 
   const now = Date.now();
   user.created = now;
@@ -51,7 +58,11 @@ const createUser = async (req, res) => {
   try {
     const existingUser = await db.collection('users').findOne({ username: user.username });
     if (existingUser) {
-      return res.status(400).json({ error: 'ERROR: Username already exists' });
+      errors.push({msg: 'ERROR: Username already exists'});
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
     }
 
     const hashedPassword = await bcrypt.hash(user.password, 10);
@@ -61,33 +72,64 @@ const createUser = async (req, res) => {
     res.status(201).json(result);
   } catch (err) {
     logger.error('DATABASE ERROR:', err);
-    res.status(500).json({ error: 'ERROR: Could not create document' });
+    res.status(500).json({ errors: ['ERROR: Could not create document'] });
   }
 };
+
+const validateNewUser = async (req, res) => {
+  const db = req.app.locals.db;
+  const user = req.body;
+  const errors = req.validationErrors || [];
+
+  try {
+    const existingUser = await db.collection('users').findOne({ username: user.username });
+    if (existingUser) {
+      errors.push({ msg: 'ERROR: Username already exists'});
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
+
+    res.status(200).json([]);
+  } catch (err) {
+    logger.error('DATABASE ERROR:', err);
+    errors.push({ msg: 'ERROR: Could not validate document', param: '', location: 'internal' });
+    res.status(500).json({ errors });
+  }
+};
+
 
 const updateUser = async (req, res) => {
   const db = req.app.locals.db;
   const { currentPassword, ...updates } = req.body;
   const id = req.params.id;
+  const errors = req.validationErrors || [];
 
   if (!currentPassword) {
-    return res.status(400).json({ error: "ERROR: Current password must be provided" });
+    errors.push({ msg: 'ERROR: Current password must be provided', param: 'currentPassword', location: 'body' });
   }
 
   if (Object.keys(updates).length === 0) {
-    return res.status(400).json({ error: "ERROR: No update fields provided" });
+    errors.push({ msg: 'ERROR: No update fields provided', param: '', location: 'body' });
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
   }
 
   try {
     const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
 
     if (!user) {
-      return res.status(404).json({ error: "NOT FOUND: No user found with such id" });
+      errors.push({ msg: 'NOT FOUND: No user found with such id', param: 'id', location: 'params' });
+      return res.status(404).json({ errors });
     }
 
     const passwordMatch = await bcrypt.compare(currentPassword, user.password);
     if (!passwordMatch) {
-      return res.status(403).json({ error: "ERROR: Current password is incorrect" });
+      errors.push({ msg: 'ERROR: Current password is incorrect', param: 'currentPassword', location: 'body' });
+      return res.status(403).json({ errors });
     }
 
     if (updates.password) {
@@ -101,38 +143,47 @@ const updateUser = async (req, res) => {
 
     res.status(200).json(result);
   } catch (err) {
-    logger.error("Database error:", err);
-    res.status(500).json({ error: "ERROR: Could not update document" });
+    logger.error("DATABASE ERROR:", err);
+    errors.push({ msg: 'ERROR: Could not update document', param: '', location: 'internal' });
+    res.status(500).json({ errors });
   }
 };
 
 const deleteUser = async (req, res) => {
   const db = req.app.locals.db;
-  const { currentPassword } = req.body; 
+  const { currentPassword } = req.body;
   const id = req.params.id;
+  const errors = req.validationErrors || [];
 
   if (!currentPassword) {
-    return res.status(400).json({ error: "ERROR: Current password must be provided" });
+    errors.push({ msg: 'ERROR: Current password must be provided', param: 'currentPassword', location: 'body' });
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
   }
 
   try {
     const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
 
     if (!user) {
-      return res.status(404).json({ error: "NOT FOUND: No user found with such id" });
+      errors.push({ msg: 'NOT FOUND: No user found with such id', param: 'id', location: 'params' });
+      return res.status(404).json({ errors });
     }
 
     const passwordMatch = await bcrypt.compare(currentPassword, user.password);
     if (!passwordMatch) {
-      return res.status(403).json({ error: "ERROR: Current password is incorrect" });
+      errors.push({ msg: 'ERROR: Current password is incorrect', param: 'currentPassword', location: 'body' });
+      return res.status(403).json({ errors });
     }
 
     const result = await db.collection("users").deleteOne({ _id: new ObjectId(id) });
 
     res.status(200).json(result);
   } catch (err) {
-    logger.error("Database error:", err);
-    res.status(500).json({ error: "ERROR: Could not delete document" });
+    logger.error("DATABASE ERROR:", err);
+    errors.push({ msg: 'ERROR: Could not delete document', param: '', location: 'internal' });
+    res.status(500).json({ errors });
   }
 };
 
@@ -140,6 +191,7 @@ module.exports = {
   getUsers,
   getUserById,
   createUser,
+  validateNewUser,
   updateUser,
   deleteUser
 };
