@@ -18,8 +18,7 @@ const getUsers = async (req, res) => {
     res.status(200).json(elements);
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    errors.push({ msg: 'ERROR: Could not fetch documents', param: '', location: 'internal' });
-    res.status(500).json({ errors });
+    res.status(500).json({ msg: 'ERROR: Could not fetch documents' });
   }
 };
 
@@ -34,18 +33,15 @@ const getUserById = async (req, res) => {
       { projection: { password: 0 } }
     );
     if (!doc) {
-      errors.push({ msg: 'NOT FOUND: No report found with such id', param: 'id', location: 'params' });
-      return res.status(404).json({ errors });
+      return res.status(404).json({ msg: 'NOT FOUND: No report found with such id'});
     } else {
       res.status(200).json(doc);
     }
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    errors.push({ msg: 'ERROR: Could not fetch document', param: '', location: 'internal' });
-    res.status(500).json({ errors });
+    res.status(500).json({ msg: 'ERROR: Could not fetch document'});
   }
 };
-
 
 const createUser = async (req, res) => {
   const db = req.app.locals.db;
@@ -94,8 +90,7 @@ const validateNewUser = async (req, res) => {
     res.status(200).json([]);
   } catch (err) {
     logger.error('DATABASE ERROR:', err);
-    errors.push({ msg: 'ERROR: Could not validate document', param: '', location: 'internal' });
-    res.status(500).json({ errors });
+    res.status(500).json({ msg: 'ERROR: Could not validate document' });
   }
 };
 
@@ -106,12 +101,12 @@ const updateUser = async (req, res) => {
   const id = req.params.id;
   const errors = req.validationErrors || [];
 
-  if (!currentPassword) {
-    errors.push({ msg: 'ERROR: Current password must be provided', param: 'currentPassword', location: 'body' });
-  }
-
   if (Object.keys(updates).length === 0) {
-    errors.push({ msg: 'ERROR: No update fields provided', param: '', location: 'body' });
+    errors.push({ msg: 'ERROR: No update fields provided'});
+  }
+  
+  if (!currentPassword) {
+    errors.push({ msg: 'ERROR: Current password must be provided'});
   }
 
   if (errors.length > 0) {
@@ -122,14 +117,12 @@ const updateUser = async (req, res) => {
     const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
 
     if (!user) {
-      errors.push({ msg: 'NOT FOUND: No user found with such id', param: 'id', location: 'params' });
-      return res.status(404).json({ errors });
+      return res.status(404).json({ msg: 'NOT FOUND: No user found with such id'});
     }
 
     const passwordMatch = await bcrypt.compare(currentPassword, user.password);
     if (!passwordMatch) {
-      errors.push({ msg: 'ERROR: Current password is incorrect', param: 'currentPassword', location: 'body' });
-      return res.status(403).json({ errors });
+      return res.status(403).json({ msg: 'ERROR: Current password is incorrect'});
     }
 
     if (updates.password) {
@@ -144,8 +137,7 @@ const updateUser = async (req, res) => {
     res.status(200).json(result);
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    errors.push({ msg: 'ERROR: Could not update document', param: '', location: 'internal' });
-    res.status(500).json({ errors });
+    res.status(500).json({ msg: 'ERROR: Could not update document'});
   }
 };
 
@@ -156,7 +148,7 @@ const deleteUser = async (req, res) => {
   const errors = req.validationErrors || [];
 
   if (!currentPassword) {
-    errors.push({ msg: 'ERROR: Current password must be provided', param: 'currentPassword', location: 'body' });
+    errors.push({ msg: 'ERROR: Current password must be provided'});
   }
 
   if (errors.length > 0) {
@@ -167,14 +159,12 @@ const deleteUser = async (req, res) => {
     const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
 
     if (!user) {
-      errors.push({ msg: 'NOT FOUND: No user found with such id', param: 'id', location: 'params' });
-      return res.status(404).json({ errors });
+      return res.status(404).json({ msg: 'NOT FOUND: No user found with such id'});
     }
 
     const passwordMatch = await bcrypt.compare(currentPassword, user.password);
     if (!passwordMatch) {
-      errors.push({ msg: 'ERROR: Current password is incorrect', param: 'currentPassword', location: 'body' });
-      return res.status(403).json({ errors });
+      return res.status(403).json({ msg: 'ERROR: Current password is incorrect'});
     }
 
     const result = await db.collection("users").deleteOne({ _id: new ObjectId(id) });
@@ -182,8 +172,7 @@ const deleteUser = async (req, res) => {
     res.status(200).json(result);
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    errors.push({ msg: 'ERROR: Could not delete document', param: '', location: 'internal' });
-    res.status(500).json({ errors });
+    res.status(500).json({ msg: 'ERROR: Could not delete document'});
   }
 };
 
