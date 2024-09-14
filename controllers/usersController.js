@@ -6,7 +6,6 @@ const getUsers = async (req, res) => {
   const db = req.app.locals.db;
   const page = parseInt(req.query.p) || 0;
   const elementsPerPage = 10;
-  const errors = req.validationErrors || [];
 
   try {
     const elements = await db.collection("users")
@@ -25,7 +24,6 @@ const getUsers = async (req, res) => {
 const getUserById = async (req, res) => {
   const db = req.app.locals.db;
   const id = req.params.id;
-  const errors = req.validationErrors || [];
 
   try {
     const doc = await db.collection("users").findOne(
@@ -46,7 +44,7 @@ const getUserById = async (req, res) => {
 const createUser = async (req, res) => {
   const db = req.app.locals.db;
   const user = req.body;
-  const errors = [];
+  const errors = req.validationErrors || [];
 
   const now = Date.now();
   user.created = now;
