@@ -2,13 +2,17 @@ const { body, param } = require('express-validator');
 const { ObjectId } = require("mongodb");
 
 const validateUser = [
-  body('username').isString().isLength({ max: 20 }).withMessage('ERROR: Username must be a string with a maximum length of 20 characters'),
-  body('password').isString().isLength({ max: 20 }).withMessage('ERROR: Password must be a string with a maximum length of 20 characters')
+  body('username').isString().isLength({ min: 4 }).withMessage('Το ονόμα χρήστη πρέπει να αποτελείται τουλάχιστον από 4 χαρακτήρες'),
+  body('username').isString().isLength({ max: 20 }).withMessage('Το ονόμα χρήστη πρέπει να αποτελείται το πολύ από 20 χαρακτήρες'),
+  body('password').isString().isLength({ max: 100 }).withMessage('Ο κωδικός πρόσβασης πρέπει να αποτελείται από το πολύ 100 χαρακτήρες'),
+  body('password').isString().isLength({ min: 8 }).withMessage('Ο κωδικός πρόσβασης πρέπει να αποτελείται τουλάχιστον από 8 χαρακτήρες')
 ];
 
 const validateUserUpdate = [
-  body('username').optional().isString().isLength({ max: 20 }).withMessage('ERROR: Username must be a string with a maximum length of 20 characters'),
-  body('password').optional().isString().isLength({ max: 20 }).withMessage('ERROR: Password must be a string with a maximum length of 20 characters')
+  body('username').isString().isLength({ min: 4 }).withMessage('Το ονόμα χρήστη πρέπει να αποτελείται τουλάχιστον από 4 χαρακτήρες'),
+  body('username').isString().isLength({ max: 20 }).withMessage('Το ονόμα χρήστη πρέπει να αποτελείται το πολύ από 20 χαρακτήρες'),
+  body('password').isString().isLength({ max: 100 }).withMessage('Ο κωδικός πρόσβασης πρέπει να αποτελείται από το πολύ 100 χαρακτήρες'),
+  body('password').isString().isLength({ min: 8 }).withMessage('Ο κωδικός πρόσβασης πρέπει να αποτελείται τουλάχιστον από 8 χαρακτήρες')
 ];
 
 const validateUserIdParam = [
