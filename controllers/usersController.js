@@ -17,7 +17,7 @@ const getUsers = async (req, res) => {
     res.status(200).json(elements);
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    res.status(500).json({ msg: 'DATABASE ERROR: Could not fetch documents' });
+    res.status(500).json({ errors : [{ msg: 'DATABASE ERROR: Could not fetch documents' }]});
   }
 };
 
@@ -31,13 +31,13 @@ const getUserById = async (req, res) => {
       { projection: { password: 0 } }
     );
     if (!doc) {
-      return res.status(404).json({ msg: 'NOT FOUND: No report found with such id'});
+        return res.status(404).json({ errors : [{ msg: 'NOT FOUND: No report found with such id'}]});
     } else {
       res.status(200).json(doc);
     }
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    res.status(500).json({ msg: 'DATABASE ERROR: Could not fetch document'});
+    res.status(500).json({ errors : [{ msg: 'DATABASE ERROR: Could not fetch document'}]});
   }
 };
 
@@ -51,7 +51,7 @@ const createUser = async (req, res) => {
 
   try {
     if (!user.recaptchaToken) {
-      return res.status(400).json({ msg: "Αποτυχία reCAPTCHA" });
+      return res.status(400).json({ errors : [{ msg: "Αποτυχία reCAPTCHA" }]});
     }
 
     const response = await fetch(`https://www.google.com/recaptcha/api/siteverify`, {
@@ -65,7 +65,7 @@ const createUser = async (req, res) => {
     const recaptchaResponse = await response.json();
 
     if (!recaptchaResponse.success) {
-      return res.status(400).json({ msg: "Αποτυχία reCAPTCHA"});
+      return res.status(400).json({ errors : [{ msg: "Αποτυχία reCAPTCHA"}]});
     }
 
     const existingUser = await db.collection('users').findOne({ username: user.username });
@@ -95,23 +95,23 @@ const updateUser = async (req, res) => {
   const id = req.params.id;
 
   if (Object.keys(updates).length === 0) {
-    return res.status(400).json({ msg: 'ERROR: No update fields provided'});
+      return res.status(400).json({ errors : [{ msg: 'ERROR: No update fields provided'}]});
   }
   
   if (!currentPassword) {
-    return res.status(400).json({ msg: 'ERROR: Current password must be provided'});
+    return res.status(400).json({ errors : [{ msg: 'ERROR: Current password must be provided'}]});
   }
 
   try {
     const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
 
     if (!user) {
-      return res.status(404).json({ msg: 'ERROR: No user found with such id'});
+      return res.status(404).json({ errors : [{ msg: 'ERROR: No user found with such id'}]});
     }
 
     const passwordMatch = await bcrypt.compare(currentPassword, user.password);
     if (!passwordMatch) {
-      return res.status(403).json({ msg: 'ERROR: Current password is incorrect'});
+      return res.status(403).json({ errors : [{ msg: 'ERROR: Current password is incorrect'}]});
     }
 
     if (updates.password) {
@@ -126,7 +126,7 @@ const updateUser = async (req, res) => {
     res.status(200).json(result);
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    res.status(500).json({ msg: 'DATABASE ERROR: Could not update document'});
+    res.status(500).json({ errors : [{ msg: 'DATABASE ERROR: Could not update document'}]});
   }
 };
 
@@ -136,19 +136,19 @@ const deleteUser = async (req, res) => {
   const id = req.params.id;
 
   if (!currentPassword) {
-    return res.status(400).json({ msg: 'ERROR: Current password must be provided'});
+    return res.status(400).json({ errors : [{ msg: 'ERROR: Current password must be provided'}]});
   }
 
   try {
     const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
 
     if (!user) {
-      return res.status(404).json({ msg: 'ERROR: No user found with such id'});
+      return res.status(404).json({ errors : [{ msg: 'ERROR: No user found with such id'}]});
     }
 
     const passwordMatch = await bcrypt.compare(currentPassword, user.password);
     if (!passwordMatch) {
-      return res.status(403).json({ msg: 'ERROR: Current password is incorrect'});
+      return res.status(403).json({ errors : [{ msg: 'ERROR: Current password is incorrect'}]});
     }
 
     const result = await db.collection("users").deleteOne({ _id: new ObjectId(id) });
@@ -156,7 +156,7 @@ const deleteUser = async (req, res) => {
     res.status(200).json(result);
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    res.status(500).json({ msg: 'ERROR: Could not delete document'});
+    res.status(500).json({ errors : [{ msg: 'ERROR: Could not delete document' }]});
   }
 };
 
