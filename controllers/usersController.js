@@ -51,7 +51,7 @@ const createUser = async (req, res) => {
 
   try {
     if (!user.recaptchaToken) {
-      return res.status(400).json({ errors: ["Αποτυχία reCAPTCHA"] });
+      return res.status(400).json({ msg: "Αποτυχία reCAPTCHA" });
     }
 
     const response = await fetch(`https://www.google.com/recaptcha/api/siteverify`, {
@@ -65,7 +65,7 @@ const createUser = async (req, res) => {
     const recaptchaResponse = await response.json();
 
     if (!recaptchaResponse.success) {
-      return res.status(400).json({ errors: ["Αποτυχία reCAPTCHA"] });
+      return res.status(400).json({ msg: "Αποτυχία reCAPTCHA"});
     }
 
     const existingUser = await db.collection('users').findOne({ username: user.username });
@@ -84,7 +84,7 @@ const createUser = async (req, res) => {
     res.status(201).json(result);
   } catch (err) {
     logger.error('DATABASE ERROR:', err);
-    res.status(500).json({ errors: ['DATABASE ERROR: Could not create document'] });
+    res.status(500).json({ msg: "DATABASE ERROR: Could not create document" });
   }
 };
 
