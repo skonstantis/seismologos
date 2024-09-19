@@ -5,16 +5,16 @@ const validatePassword = (value) => {
   const errors = [];
 
   if (!/[a-z]/.test(value)) {
-    errors.push('Ο κωδικός πρόσβασης πρέπει να περιέχει τουλάχιστον ένα μικρό γράμμα');
+    errors.push('τουλάχιστον ένα μικρό γράμμα');
   }
   if (!/[A-Z]/.test(value)) {
-    errors.push('Ο κωδικός πρόσβασης πρέπει να περιέχει τουλάχιστον ένα κεφαλαίο γράμμα');
+    errors.push('τουλάχιστον ένα κεφαλαίο γράμμα');
   }
   if (!/[0-9]/.test(value)) {
-    errors.push('Ο κωδικός πρόσβασης πρέπει να περιέχει τουλάχιστον έναν αριθμό');
+    errors.push('τουλάχιστον έναν αριθμό');
   }
   if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
-    errors.push('Ο κωδικός πρόσβασης πρέπει να περιέχει τουλάχιστον ένα σύμβολο');
+    errors.push('τουλάχιστον ένα σύμβολο');
   }
 
   return errors;
@@ -30,7 +30,7 @@ const validateUser = [
     .custom((value) => {
       const errors = validatePassword(value);
       if (errors.length > 0) {
-        throw new Error(errors.join(', '));
+        throw new Error(" Ο κωδικός πρόσβασης πρέπει να περιέχει " + errors.join(' και '));
       }
       return true;
     })
