@@ -50,6 +50,24 @@ const createUser = async (req, res) => {
   user.created = now;
 
   try {
+    if (!user.recaptchaToken) {
+      return res.status(400).json({ errors: ["Αποτυχία reCAPTCHA"] });
+    }
+
+    const response = await fetch(`https://www.google.com/recaptcha/api/siteverify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: `secret=6LewXkkqAAAAAO_oElVGkQQKZFE44z_lN73Fmje6&response=${user.recaptchaToken}`
+    });
+
+    const recaptchaResponse = await response.json();
+
+    if (!recaptchaResponse.success) {
+      return res.status(400).json({ errors: ["Αποτυχία reCAPTCHA"] });
+    }
+
     const existingUser = await db.collection('users').findOne({ username: user.username });
     if (existingUser) {
       errors.push({msg: 'Το όνομα χρήστη ' + user.username + " χρησιμοποιείται ήδη"});
