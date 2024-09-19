@@ -59,7 +59,7 @@ const createUser = async (req, res) => {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: `secret=6LewXkkqAAAAAO_oElVGkQQKZFE44z_lN73Fmje6&response=${user.recaptchaToken}`
+      body: `secret=${process.env.RECAPTCHA_SECRET}&response=${user.recaptchaToken}`
     });
 
     const recaptchaResponse = await response.json();
