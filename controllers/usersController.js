@@ -72,7 +72,7 @@ const createUser = async (req, res) => {
       errors.push({msg: 'Το όνομα χρήστη ' + user.username + " χρησιμοποιείται ήδη"});
     }
 
-    if (await db.collection('users').findOne({ username: user.email })) {
+    if (await db.collection('users').findOne({ email: user.email })) {
       errors.push({msg: 'Το email ' + user.username + " χρησιμοποιείται ήδη"});
     }
 
