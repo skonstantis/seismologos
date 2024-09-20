@@ -85,6 +85,8 @@ const createUser = async (req, res) => {
     
     delete user.recaptchaToken;
 
+    user.verifiedEmail = false;
+
     const result = await db.collection('users').insertOne(user);
     res.status(201).json(result);
   } catch (err) {
