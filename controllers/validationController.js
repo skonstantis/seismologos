@@ -10,15 +10,20 @@ const validateUser = async (req, res) => {
     if (existingUser && user.username) {
       errors.push({ msg: 'Το όνομα χρήστη ' + user.username + " χρησιμοποιείται ήδη"});
     }
+      
+    if (!user.username) {
+      errors = errors.filter(error => error.path !== "username");
+      errors.push({ msg: 'Το όνομα χρήστη δεν μπορεί να είναι κενό'});
+    }
+
+    if (!user.username) {
+      errors = errors.filter(error => error.path !== "email");
+      errors.push({ msg: 'Το email δεν μπορεί να είναι κενό'});
+    }
 
     if (!user.password) {
       errors = errors.filter(error => error.path !== "password");
       errors.push({ msg: 'Ο κωδικός πρόσβασης δεν μπορεί να είναι κενός'});
-    }
-  
-    if (!user.username) {
-        errors = errors.filter(error => error.path !== "username");
-        errors.push({ msg: 'Το όνομα χρήστη δεν μπορεί να είναι κενό'});
     }
 
     if (errors.length > 0) {
