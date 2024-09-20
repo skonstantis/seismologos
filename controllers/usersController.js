@@ -88,6 +88,31 @@ const createUser = async (req, res) => {
     user.verifiedEmail = false;
 
     const result = await db.collection('users').insertOne(user);
+    
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.hostinger.com', 
+      port: 465, 
+      secure: true, 
+      auth: {
+        user: process.env.EMAIL, 
+        pass: process.env.EMAIL_PASSWORD 
+      }
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL, 
+      to: user.email, 
+      subject: 'Επιβεβαίωση email seismologos.gr', 
+      html: `<p>Καλωσόρισες, ${user.username}\n Ευχαριστούμε για την εγγραφή σου.\n</p>
+      <a href="http://${req.headers.host}/confirm-email?token=${result.insertedId}">Confirm Email</a>`
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        return logger.error('EMAIL ERROR:', error);
+      }
+    });
+
     res.status(201).json(result);
   } catch (err) {
     logger.error('DATABASE ERROR:', err);
