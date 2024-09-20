@@ -6,8 +6,11 @@ const validateUser = async (req, res) => {
   let errors = req.validationErrors || [];
 
   try {
-    const existingUser = await db.collection('users').findOne({ username: user.username });
-    if (existingUser && user.username) {
+    if (user.username && await db.collection('users').findOne({ username: user.username })) {
+      errors.push({ msg: 'Το όνομα χρήστη ' + user.username + " χρησιμοποιείται ήδη"});
+    }
+
+    if (user.email && await db.collection('users').findOne({ email: user.email })) {
       errors.push({ msg: 'Το όνομα χρήστη ' + user.username + " χρησιμοποιείται ήδη"});
     }
       
@@ -16,7 +19,7 @@ const validateUser = async (req, res) => {
       errors.push({ msg: 'Το όνομα χρήστη δεν μπορεί να είναι κενό'});
     }
 
-    if (!user.username) {
+    if (!user.email) {
       errors = errors.filter(error => error.path !== "email");
       errors.push({ msg: 'Το email δεν μπορεί να είναι κενό'});
     }
