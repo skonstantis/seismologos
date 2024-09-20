@@ -1,3 +1,4 @@
+const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const { ObjectId } = require("mongodb");
 const { logger } = require("../config/logger");
@@ -116,7 +117,7 @@ const createUser = async (req, res) => {
     res.status(201).json(result);
   } catch (err) {
     logger.error('DATABASE ERROR:', err);
-    res.status(500).json({ msg: "DATABASE ERROR: Could not create document" });
+    res.status(500).json({ errors : [{  msg: "DATABASE ERROR: Could not create document" }]});
   }
 };
 
