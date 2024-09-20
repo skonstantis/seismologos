@@ -11,7 +11,7 @@ const validateUser = async (req, res) => {
     }
 
     if (user.email && await db.collection('users').findOne({ email: user.email })) {
-      errors.push({ msg: 'Το όνομα χρήστη ' + user.username + " χρησιμοποιείται ήδη"});
+      errors.push({ msg: 'Το email ' + user.email + " χρησιμοποιείται ήδη"});
     }
       
     if (!user.username) {
