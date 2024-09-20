@@ -33,7 +33,8 @@ const validateUser = [
         throw new Error(" Ο κωδικός πρόσβασης πρέπει να περιέχει " + errors.join(' και '));
       }
       return true;
-    })
+    }),
+    body('email').isEmail().withMessage('Παρακαλώ εισάγετε μια έγκυρη διεύθυνση email')
 ];
 
 const validateUserUpdate = [
@@ -49,7 +50,8 @@ const validateUserUpdate = [
         throw new Error(errors.join(', '));
       }
       return true;
-    })
+    }),
+    body('email').isEmail().withMessage('Παρακαλώ εισάγετε μια έγκυρη διεύθυνση email')
 ];
 
 const validateUserIdParam = [

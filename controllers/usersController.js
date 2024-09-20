@@ -68,9 +68,12 @@ const createUser = async (req, res) => {
       return res.status(400).json({ errors : [{ msg: "Αποτυχία reCAPTCHA"}]});
     }
 
-    const existingUser = await db.collection('users').findOne({ username: user.username });
-    if (existingUser) {
+    if (await db.collection('users').findOne({ username: user.username })) {
       errors.push({msg: 'Το όνομα χρήστη ' + user.username + " χρησιμοποιείται ήδη"});
+    }
+
+    if (await db.collection('users').findOne({ username: user.email })) {
+      errors.push({msg: 'Το email ' + user.username + " χρησιμοποιείται ήδη"});
     }
 
     if (errors.length > 0) {
@@ -79,6 +82,8 @@ const createUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(user.password, 10);
     user.password = hashedPassword;
+    
+    delete user.recaptchaToken;
 
     const result = await db.collection('users').insertOne(user);
     res.status(201).json(result);
