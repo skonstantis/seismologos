@@ -41,7 +41,18 @@ const passwordValidation = () => {
         throw new Error('Ο κωδικός πρόσβασης μπορεί να περιέχει μόνο γράμματα (Αγγλικά ή Ελληνικά), αριθμούς και ειδικούς χαρακτήρες.');
       }
       return true;
-    });
+    })
+    .custom((value) => {
+      const errors = validatePassword(value);
+      if (errors.length > 0) {
+        const lastError = errors.pop();
+        const errorMessage = errors.length > 0 
+          ? errors.join(', ') + ' και ' + lastError 
+          : lastError;
+        throw new Error("Ο κωδικός πρόσβασης πρέπει να περιέχει " + errorMessage);
+      }
+      return true;
+    });;
 };
 
 const emailValidation = () => {
