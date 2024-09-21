@@ -3,11 +3,11 @@ const { ObjectId } = require("mongodb");
 
 const validatePassword = (value) => {
   const errors = [];
-  if (!/[a-z]/.test(value)) {
-    errors.push('τουλάχιστον ένα μικρό γράμμα');
+  if (!/[a-zα-ω]/.test(value)) {
+    errors.push('τουλάχιστον ένα μικρό γράμμα (Αγγλικά ή Ελληνικά)');
   }
-  if (!/[A-Z]/.test(value)) {
-    errors.push('τουλάχιστον ένα κεφαλαίο γράμμα');
+  if (!/[A-ZΑ-Ω]/.test(value)) {
+    errors.push('τουλάχιστον ένα κεφαλαίο γράμμα (Αγγλικά ή Ελληνικά)');
   }
   if (!/[0-9]/.test(value)) {
     errors.push('τουλάχιστον έναν αριθμό');
