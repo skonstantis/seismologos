@@ -3,7 +3,6 @@ const { ObjectId } = require("mongodb");
 
 const validatePassword = (value) => {
   const errors = [];
-
   if (!/[a-z]/.test(value)) {
     errors.push('τουλάχιστον ένα μικρό γράμμα');
   }
@@ -16,42 +15,54 @@ const validatePassword = (value) => {
   if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
     errors.push('τουλάχιστον ένα σύμβολο');
   }
-
   return errors;
 };
 
-const validateUser = [
-  body('username').isString().isLength({ min: 4 }).withMessage('Το όνομα χρήστη πρέπει να αποτελείται τουλάχιστον από 4 χαρακτήρες'),
-  body('username').isString().isLength({ max: 20 }).withMessage('Το όνομα χρήστη πρέπει να αποτελείται το πολύ από 20 χαρακτήρες'),
-  body('password')
+const usernameValidation = () => {
+  return body('username')
+    .isString()
+    .isLength({ min: 4 }).withMessage('Το όνομα χρήστη πρέπει να αποτελείται τουλάχιστον από 4 χαρακτήρες')
+    .isLength({ max: 20 }).withMessage('Το όνομα χρήστη πρέπει να αποτελείται το πολύ από 20 χαρακτήρες')
+    .custom((value) => {
+      if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+        throw new Error('Το όνομα χρήστη μπορεί να περιέχει μόνο γράμματα, αριθμούς, κάτω παύλες και παύλες.');
+      }
+      return true;
+    });
+};
+
+const passwordValidation = () => {
+  return body('password')
     .isString()
     .isLength({ max: 100 }).withMessage('Ο κωδικός πρόσβασης πρέπει να αποτελείται από το πολύ 100 χαρακτήρες')
     .isLength({ min: 8 }).withMessage('Ο κωδικός πρόσβασης πρέπει να αποτελείται τουλάχιστον από 8 χαρακτήρες')
     .custom((value) => {
       const errors = validatePassword(value);
       if (errors.length > 0) {
-        throw new Error(" Ο κωδικός πρόσβασης πρέπει να περιέχει " + errors.join(' και '));
+        const lastError = errors.pop();
+        const errorMessage = errors.length > 0 
+          ? errors.join(', ') + ' και ' + lastError 
+          : lastError;
+        throw new Error("Ο κωδικός πρόσβασης πρέπει να περιέχει " + errorMessage);
       }
       return true;
-    }),
-    body('email').isEmail().withMessage('Παρακαλώ εισάγετε μια έγκυρη διεύθυνση email')
+    });
+};
+
+const emailValidation = () => {
+  return body('email').isEmail().withMessage('Παρακαλώ εισάγετε μια έγκυρη διεύθυνση email');
+};
+
+const validateUser = [
+  usernameValidation(),
+  passwordValidation(),
+  emailValidation(),
 ];
 
 const validateUserUpdate = [
-  body('username').isString().isLength({ min: 4 }).withMessage('Το όνομα χρήστη πρέπει να αποτελείται τουλάχιστον από 4 χαρακτήρες'),
-  body('username').isString().isLength({ max: 20 }).withMessage('Το όνομα χρήστη πρέπει να αποτελείται το πολύ από 20 χαρακτήρες'),
-  body('password')
-    .isString()
-    .isLength({ max: 100 }).withMessage('Ο κωδικός πρόσβασης πρέπει να αποτελείται από το πολύ 100 χαρακτήρες')
-    .isLength({ min: 8 }).withMessage('Ο κωδικός πρόσβασης πρέπει να αποτελείται τουλάχιστον από 8 χαρακτήρες')
-    .custom((value) => {
-      const errors = validatePassword(value);
-      if (errors.length > 0) {
-        throw new Error(errors.join(', '));
-      }
-      return true;
-    }),
-    body('email').isEmail().withMessage('Παρακαλώ εισάγετε μια έγκυρη διεύθυνση email')
+  usernameValidation(),
+  passwordValidation(),
+  emailValidation(),
 ];
 
 const validateUserIdParam = [
