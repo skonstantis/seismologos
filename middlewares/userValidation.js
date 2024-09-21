@@ -22,7 +22,7 @@ const usernameValidation = () => {
   return body('username')
     .isString()
     .isLength({ min: 4 }).withMessage('Το όνομα χρήστη πρέπει να αποτελείται τουλάχιστον από 4 χαρακτήρες')
-    .isLength({ max: 20 }).withMessage('Το όνομα χρήστη πρέπει να αποτελείται το πολύ από 20 χαρακτήρες')
+    .isLength({ max: 50 }).withMessage('Το όνομα χρήστη πρέπει να αποτελείται το πολύ από 50 χαρακτήρες')
     .custom((value) => {
       if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
         throw new Error('Το όνομα χρήστη μπορεί να περιέχει μόνο γράμματα, αριθμούς, κάτω παύλες και παύλες.');

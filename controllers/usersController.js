@@ -136,16 +136,30 @@ const sendVerificationEmail = async (email, username, userId, host) => {
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #dcdcdc; border-radius: 10px;">
         <h2 style="color: #333;">Καλωσόρισες, ${username}!</h2>
-        <p>Ευχαριστούμε για την εγγραφή σου στο seismologos.gr.</p>
-        <p>Για να επιβεβαιώσεις το email σου, παρακαλούμε κάνε κλικ στο παρακάτω κουμπί:</p>
+        <p>Ευχαριστούμε για την εγγραφή σας στο seismologos.gr.</p>
+        <p>Για να επιβεβαιώσετε το email σας, παρακαλούμε επιλέξτε 'Επιβεβαίωση Email' παρακάτω.</p>
         <a href="http://${host}/confirm-email?token=${userId}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Επιβεβαίωση Email</a>
-        <p>Αν δεν έκανες εσύ την εγγραφή, αγνόησε αυτό το email.</p>
+        <p>Αν δεν κάνατε εσείς την εγγραφή, αγνοήστε αυτό το email.</p>
         <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
         <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">
-        <p style="font-size: 12px; color: #888;">Αυτό το μήνυμα στάλθηκε από το seismologos.gr. Παρακαλούμε μην απαντήσεις σε αυτό το email.</p>
+        <p style="font-size: 12px; color: #888; text-align: center">Αυτό το μήνυμα στάλθηκε αυτόματα από το seismologos.gr. Παρακαλούμε μην απαντήσετε σε αυτό το email.<br> Για οποιαδήποτε πληροφορία επικοινωνήστε μαζί μας στο support@seismologos.gr</p>
       </div>
+      <style>
+        @media only screen and (max-width: 600px) {
+          h2 {
+            font-size: 20px;
+          }
+          p {
+            font-size: 14px;
+          }
+          a {
+            font-size: 15px;
+            padding: 8px 16px;
+          }
+        }
+      </style>
     `,
-  };
+  };  
 
   try {
     await transporter.sendMail(mailOptions);
