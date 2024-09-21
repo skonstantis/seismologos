@@ -24,8 +24,8 @@ const usernameValidation = () => {
     .isLength({ min: 4 }).withMessage('Το όνομα χρήστη πρέπει να αποτελείται τουλάχιστον από 4 χαρακτήρες')
     .isLength({ max: 50 }).withMessage('Το όνομα χρήστη πρέπει να αποτελείται το πολύ από 50 χαρακτήρες')
     .custom((value) => {
-      if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
-        throw new Error('Το όνομα χρήστη μπορεί να περιέχει μόνο γράμματα, αριθμούς, κάτω παύλες και παύλες.');
+      if (!/^[a-zA-Z0-9α-ωΑ-Ω_-]+$/.test(value)) {
+        throw new Error('Το όνομα χρήστη μπορεί να περιέχει μόνο γράμματα (Αγγλικά ή Ελληνικά), αριθμούς, κάτω παύλες και παύλες.');
       }
       return true;
     });
@@ -37,13 +37,8 @@ const passwordValidation = () => {
     .isLength({ max: 100 }).withMessage('Ο κωδικός πρόσβασης πρέπει να αποτελείται από το πολύ 100 χαρακτήρες')
     .isLength({ min: 8 }).withMessage('Ο κωδικός πρόσβασης πρέπει να αποτελείται τουλάχιστον από 8 χαρακτήρες')
     .custom((value) => {
-      const errors = validatePassword(value);
-      if (errors.length > 0) {
-        const lastError = errors.pop();
-        const errorMessage = errors.length > 0 
-          ? errors.join(', ') + ' και ' + lastError 
-          : lastError;
-        throw new Error("Ο κωδικός πρόσβασης πρέπει να περιέχει " + errorMessage);
+      if (!/^[a-zA-Z0-9α-ωΑ-Ω!@#$%^&*()-_=+{}[\]:;"'<>,.?/`~\\|]+$/.test(value)) {
+        throw new Error('Ο κωδικός πρόσβασης μπορεί να περιέχει μόνο γράμματα (Αγγλικά ή Ελληνικά), αριθμούς και ειδικούς χαρακτήρες.');
       }
       return true;
     });

@@ -142,7 +142,7 @@ const sendVerificationEmail = async (email, username, userId, host) => {
         <p>Αν δεν κάνατε εσείς την εγγραφή, αγνοήστε αυτό το email.</p>
         <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
         <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">
-        <p style="font-size: 12px; color: #888; text-align: center">Αυτό το μήνυμα στάλθηκε αυτόματα από το seismologos.gr. Παρακαλούμε μην απαντήσετε σε αυτό το email.<br> Για οποιαδήποτε πληροφορία επικοινωνήστε μαζί μας στο support@seismologos.gr</p>
+        <p style="font-size: 12px; color: #888; text-align: center">Αυτό το μήνυμα στάλθηκε αυτόματα από το seismologos.gr.<br>Παρακαλούμε μην απαντήσετε σε αυτό το email.<br>Για οποιαδήποτε πληροφορία επικοινωνήστε μαζί μας στο support@seismologos.gr</p>
       </div>
       <style>
         @media only screen and (max-width: 600px) {
