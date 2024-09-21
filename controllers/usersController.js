@@ -135,7 +135,7 @@ const sendVerificationEmail = async (email, username, userId, host) => {
     subject: "Επιβεβαίωση email seismologos.gr",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #dcdcdc; border-radius: 10px;">
-        <h2 style="color: #333;">Καλωσόρισες, ${username}!</h2>
+        <h2 style="color: #333;">Καλωσορίσατε, ${username}!</h2>
         <p>Ευχαριστούμε για την εγγραφή σας στο seismologos.gr.</p>
         <p>Για να επιβεβαιώσετε το email σας, παρακαλούμε επιλέξτε 'Επιβεβαίωση Email' παρακάτω.</p>
         <a href="http://${host}/confirm-email?token=${userId}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Επιβεβαίωση Email</a>
