@@ -100,6 +100,8 @@ const createUser = async (req, res) => {
     delete user.recaptchaToken;
 
     user.verifiedEmail = false;
+    user.threeDaysVerificationNotification = false;
+    user.oneDayVerificationNotification = false;
 
     const result = await db.collection("users").insertOne(user);
 

@@ -66,7 +66,10 @@ const verifyEmail = async (req, res) => {
 
     await db.collection('users').updateOne(
       { _id: new ObjectId(userId) },
-      { $set: { verifiedEmail: true } }
+      {
+        $set: { verifiedEmail: true },
+        $unset: { threeDaysVerificationNotification: "", oneDayVerificationNotification: "" }
+      }
     );
 
     res.status(200).send('Email verified successfully!');
