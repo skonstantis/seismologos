@@ -68,7 +68,7 @@ const verifyEmail = async (req, res) => {
       { _id: new ObjectId(userId) },
       {
         $set: {
-          verified: Date().now()
+          verified: Date.now()
         },
         $unset: {
           threeDaysVerificationNotification: "",
