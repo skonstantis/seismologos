@@ -95,7 +95,8 @@ const sendDeletionEmail = async (email, username) => {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #dcdcdc; border-radius: 10px;">
         <h2 style="color: #333;">Αγαπητέ/ή ${username},</h2>
         <p>Δυστυχώς, επειδή δεν επιβεβαιώσατε το e-mail σας εντός της προβλεπόμενης χρονικής περιόδου, ο λογαριασμός σας στο seismologos.gr έχει διαγραφεί.</p>
-        <p>Αν επιθυμείτε να χρησιμοποιήσετε ξανά τις υπηρεσίες μας, παρακαλούμε δημιουργήστε νέο.</p>
+        <p>Δεν έχουμε κρατήσει κανένα προσωπικό σας στοιχείο.</p>
+        <p>Αν επιθυμείτε να χρησιμοποιήσετε ξανά τις υπηρεσίες μας με την ίδια διεύθυνση e-mail, παρακαλούμε δημιουργήστε νέο λογαριασμό.</p>
         <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
         <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">
         <p style="font-size: 12px; color: #888; text-align: center">Αυτό το μήνυμα στάλθηκε αυτόματα από το seismologos.gr.<br>Παρακαλούμε μην απαντήσετε σε αυτό το e-mail.<br>Για οποιαδήποτε πληροφορία επικοινωνήστε μαζί μας στο support@seismologos.gr</p>
