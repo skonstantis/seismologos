@@ -103,7 +103,7 @@ const createUser = async (req, res) => {
 
     const result = await db.collection("users").insertOne(user);
 
-    const token = jwt.sign({ userId: result.insertedId }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ userId: result.insertedId }, process.env.JWT_SECRET);
 
     await sendVerificationEmail(
       user.email,
@@ -141,7 +141,7 @@ const sendVerificationEmail = async (email, username, token, host) => {
         <h2 style="color: #333;">Καλωσορίσατε, ${username}!</h2>
         <p>Ευχαριστούμε για την εγγραφή σας στο seismologos.gr.</p>
         <p>Για να επιβεβαιώσετε το email σας, παρακαλούμε επιλέξτε 'Επιβεβαίωση Email' παρακάτω.</p>
-        <a href="http://${host}/verify-email?token=${token}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Επιβεβαίωση Email</a>
+        <a href="http://${host}/validate/verify-email?token=${token}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Επιβεβαίωση Email</a>
         <p>Αν δεν κάνατε εσείς την εγγραφή, αγνοήστε αυτό το email.</p>
         <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
         <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">
