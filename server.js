@@ -7,7 +7,7 @@ const { limiter } = require("./config/rateLimiter");
 const routes = require("./routes");
 const shutdown = require("./controllers/shutdown");
 const cron = require("node-cron"); 
-const { deleteExpiredUsers } = require("./controllers/userCleanupController"); 
+const { deleteUnverifiedUsers } = require("./controllers/userCleanupController"); 
 
 const port = process.env.PORT || 3000;
 const server = express();
@@ -24,7 +24,7 @@ dbConnect((err, database) => {
 
     cron.schedule('* * * * *', async () => {
       try {
-        await deleteExpiredUsers(server.locals.db); 
+        await deleteUnverifiedUsers(server.locals.db); 
       } catch (error) {
         logger.error("Error deleting expired users:", error);
       }
