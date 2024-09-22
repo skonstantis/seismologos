@@ -33,8 +33,7 @@ const handleUnverifiedUsers = async (db) => {
   }).toArray();
 
   for (const user of oneDayLeft) {
-    console.log(user.insertedId);
-    const token = jwt.sign({ userId: user.insertedId }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     await sendReminderEmail(user.email, user.username, 1, token);
     await db.collection("users").updateOne(
       { _id: user._id },
