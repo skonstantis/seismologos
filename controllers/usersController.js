@@ -108,8 +108,7 @@ const createUser = async (req, res) => {
     await sendVerificationEmail(
       user.email,
       user.username,
-      token,
-      req.headers.host
+      token
     );
 
     res.status(201).json(result);
