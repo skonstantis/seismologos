@@ -1,9 +1,9 @@
-const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 const { ObjectId } = require("mongodb");
 const { logger } = require("../config/logger");
 const fetch = require("node-fetch");
 const jwt = require('jsonwebtoken');
+const { sendVerificationEmail } = require("./emailController");
 
 const getUsers = async (req, res) => {
   const db = req.app.locals.db;
@@ -118,57 +118,6 @@ const createUser = async (req, res) => {
     res
       .status(500)
       .json({ errors: [{ msg: "DATABASE ERROR: Could not create document" }] });
-  }
-};
-
-const sendVerificationEmail = async (email, username, token, host) => {
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL,
-    to: email,
-    subject: "Επιβεβαίωση e-mail seismologos.gr",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #dcdcdc; border-radius: 10px;">
-        <h2 style="color: #333;">Καλωσορίσατε, ${username}!</h2>
-        <p>Ευχαριστούμε για την εγγραφή σας στο seismologos.gr.</p>
-        <p>Για να επιβεβαιώσετε το e-mail σας, παρακαλούμε επιλέξτε 'Επιβεβαίωση e-mail' παρακάτω.</p>
-        <a href="http://${host}/validate/verify-email?token=${token}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Επιβεβαίωση e-mail</a>
-        <p>Αν δεν κάνατε εσείς την εγγραφή, μπορείτε να αγνοήσετε αυτό το e-mail.</p>
-        <p><strong>Σημαντικό:</strong> Έχετε <strong>7 ημέρες</strong> για να επιβεβαιώσετε το e-mail σας. Μετά από 7 ημέρες, ο λογαριασμός σας θα διαγραφεί αυτόματα, και θα πρέπει να δημιουργήσετε έναν νέο.</p>
-        <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
-        <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">
-        <p style="font-size: 12px; color: #888; text-align: center">Αυτό το μήνυμα στάλθηκε αυτόματα από το seismologos.gr.<br>Παρακαλούμε μην απαντήσετε σε αυτό το e-mail.<br>Για οποιαδήποτε πληροφορία επικοινωνήστε μαζί μας στο support@seismologos.gr</p>
-      </div>
-      <style>
-        @media only screen and (max-width: 600px) {
-          h2 {
-            font-size: 20px;
-          }
-          p {
-            font-size: 14px;
-          }
-          a {
-            font-size: 15px;
-            padding: 8px 16px;
-          }
-        }
-      </style>
-    `,
-  };  
-
-  try {
-    await transporter.sendMail(mailOptions);
-  } catch (error) {
-    logger.error("EMAIL ERROR:", error);
   }
 };
 
