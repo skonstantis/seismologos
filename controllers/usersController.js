@@ -135,17 +135,18 @@ const sendVerificationEmail = async (email, username, token, host) => {
   const mailOptions = {
     from: process.env.EMAIL,
     to: email,
-    subject: "Επιβεβαίωση email seismologos.gr",
+    subject: "Επιβεβαίωση e-mail seismologos.gr",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #dcdcdc; border-radius: 10px;">
         <h2 style="color: #333;">Καλωσορίσατε, ${username}!</h2>
         <p>Ευχαριστούμε για την εγγραφή σας στο seismologos.gr.</p>
-        <p>Για να επιβεβαιώσετε το email σας, παρακαλούμε επιλέξτε 'Επιβεβαίωση Email' παρακάτω.</p>
-        <a href="http://${host}/validate/verify-email?token=${token}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Επιβεβαίωση Email</a>
-        <p>Αν δεν κάνατε εσείς την εγγραφή, αγνοήστε αυτό το email.</p>
+        <p>Για να επιβεβαιώσετε το e-mail σας, παρακαλούμε επιλέξτε 'Επιβεβαίωση e-mail' παρακάτω.</p>
+        <a href="http://${host}/validate/verify-email?token=${token}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Επιβεβαίωση e-mail</a>
+        <p>Αν δεν κάνατε εσείς την εγγραφή, μπορείτε να αγνοήσετε αυτό το e-mail.</p>
+        <p><strong>Σημαντικό:</strong> Έχετε <strong>7 ημέρες</strong> για να επιβεβαιώσετε το e-mail σας. Μετά από 7 ημέρες, ο λογαριασμός σας θα διαγραφεί αυτόματα, και θα μπορείτε να δημιουργήσετε έναν νέο.</p>
         <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
         <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">
-        <p style="font-size: 12px; color: #888; text-align: center">Αυτό το μήνυμα στάλθηκε αυτόματα από το seismologos.gr.<br>Παρακαλούμε μην απαντήσετε σε αυτό το email.<br>Για οποιαδήποτε πληροφορία επικοινωνήστε μαζί μας στο support@seismologos.gr</p>
+        <p style="font-size: 12px; color: #888; text-align: center">Αυτό το μήνυμα στάλθηκε αυτόματα από το seismologos.gr.<br>Παρακαλούμε μην απαντήσετε σε αυτό το e-mail.<br>Για οποιαδήποτε πληροφορία επικοινωνήστε μαζί μας στο support@seismologos.gr</p>
       </div>
       <style>
         @media only screen and (max-width: 600px) {
@@ -162,7 +163,7 @@ const sendVerificationEmail = async (email, username, token, host) => {
         }
       </style>
     `,
-  };
+  };  
 
   try {
     await transporter.sendMail(mailOptions);

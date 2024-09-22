@@ -1,6 +1,6 @@
 const { logger } = require("../config/logger");
 const { ObjectId } = require("mongodb");
-const jwt = require('jsonwebtoken'); // Import the jsonwebtoken library
+const jwt = require('jsonwebtoken');
 
 const validateUser = async (req, res) => {
   const db = req.app.locals.db;
