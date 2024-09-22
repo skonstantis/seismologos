@@ -99,7 +99,7 @@ const createUser = async (req, res) => {
 
     delete user.recaptchaToken;
 
-    user.verifiedEmail = false;
+    user.verified = null;
     user.threeDaysVerificationNotification = false;
     user.oneDayVerificationNotification = false;
 

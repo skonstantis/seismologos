@@ -60,15 +60,20 @@ const verifyEmail = async (req, res) => {
       return res.status(404).json({ errors: [{ msg: 'User not found' }] });
     }
 
-    if (user.verifiedEmail) {
+    if (user.verified) {
       return res.status(400).json({ errors: [{ msg: 'Email is already verified' }] });
     }
 
     await db.collection('users').updateOne(
       { _id: new ObjectId(userId) },
       {
-        $set: { verifiedEmail: true },
-        $unset: { threeDaysVerificationNotification: "", oneDayVerificationNotification: "" }
+        $set: {
+          verified: new Date()
+        },
+        $unset: {
+          threeDaysVerificationNotification: "",
+          oneDayVerificationNotification: ""
+        }
       }
     );
 
@@ -85,6 +90,6 @@ const verifyEmail = async (req, res) => {
 };
 
 module.exports = {
-    validateUser,
-    verifyEmail
+  validateUser,
+  verifyEmail
 };

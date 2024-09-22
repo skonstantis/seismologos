@@ -5,7 +5,7 @@ const handleUnverifiedUsers = async (db) => {
   const currentTime = Date.now();
 
   const threeDaysLeft = await db.collection("users").find({
-    verifiedEmail: false,
+    verified: null,
     threeDaysVerificationNotification: false,
     created: {
       $gte: currentTime - expirationTime,
@@ -22,7 +22,7 @@ const handleUnverifiedUsers = async (db) => {
   }
 
   const oneDayLeft = await db.collection("users").find({
-    verifiedEmail: false,
+    verified: null,
     oneDayVerificationNotification: false,
     created: {
       $gte: currentTime - expirationTime,
@@ -39,7 +39,7 @@ const handleUnverifiedUsers = async (db) => {
   }
 
   const unverifiedUsers = await db.collection("users").find({
-    verifiedEmail: false,
+    verified: null,
     created: { $lt: currentTime - expirationTime },
   }).toArray();
 
@@ -48,7 +48,7 @@ const handleUnverifiedUsers = async (db) => {
   }
 
   const result = await db.collection("users").deleteMany({
-    verifiedEmail: false,
+    verified: null,
     created: { $lt: currentTime - expirationTime },
   });
 };
