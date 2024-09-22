@@ -38,7 +38,7 @@ const sendVerificationEmail = async (email, username, token) => {
   }
 };
 
-const sendReminderEmail = async (email, username, daysLeft) => {
+const sendReminderEmail = async (email, username, daysLeft, token) => {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: process.env.EMAIL_PORT,
@@ -60,7 +60,7 @@ const sendReminderEmail = async (email, username, daysLeft) => {
         <h2 style="color: #333;">Αγαπητέ/ή ${username},</h2>
         <p>Σας υπενθυμίζουμε ότι έχετε ${daysLeft} ${dayText} για να επιβεβαιώσετε το e-mail σας στο seismologos.gr.</p>
         <p>Παρακαλούμε επιβεβαιώστε το e-mail σας για να μπορέσετε να χρησιμοποιήσετε όλες τις δυνατότητες της πλατφόρμας μας.</p>
-        <a href="http://${process.env.HOST}/validate/verify-email" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Επιβεβαίωση e-mail</a>
+        <a href="http://${process.env.HOST}/validate/verify-email?token=${token}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Επιβεβαίωση e-mail</a>
         <p>Αν δεν κάνατε εσείς την εγγραφή, αγνοήστε το παρόν e-mail.</p>
         <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
         <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">

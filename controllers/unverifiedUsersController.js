@@ -1,4 +1,5 @@
 const { sendReminderEmail, sendDeletionEmail } = require("./emailController");
+const jwt = require('jsonwebtoken');
 
 const handleUnverifiedUsers = async (db) => {
   const expirationTime = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -14,7 +15,8 @@ const handleUnverifiedUsers = async (db) => {
   }).toArray();
 
   for (const user of threeDaysLeft) {
-    await sendReminderEmail(user.email, user.username, 3);
+    const token = jwt.sign({ userId: result.insertedId }, process.env.JWT_SECRET, { expiresIn: '3d' });
+    await sendReminderEmail(user.email, user.username, 3, token);
     await db.collection("users").updateOne(
       { _id: user._id },
       { $set: { threeDaysVerificationNotification: true } }
@@ -31,7 +33,8 @@ const handleUnverifiedUsers = async (db) => {
   }).toArray();
 
   for (const user of oneDayLeft) {
-    await sendReminderEmail(user.email, user.username, 1);
+    const token = jwt.sign({ userId: result.insertedId }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    await sendReminderEmail(user.email, user.username, 1, token);
     await db.collection("users").updateOne(
       { _id: user._id },
       { $set: { oneDayVerificationNotification: true } }

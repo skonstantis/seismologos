@@ -105,7 +105,7 @@ const createUser = async (req, res) => {
 
     const result = await db.collection("users").insertOne(user);
 
-    const token = jwt.sign({ userId: result.insertedId }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ userId: result.insertedId }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
     await sendVerificationEmail(
       user.email,
