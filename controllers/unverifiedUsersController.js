@@ -1,26 +1,24 @@
 const { sendReminderEmail, sendDeletionEmail } = require("./emailController");
 
 const handleUnverifiedUsers = async (db) => {
-  const threeMinutes = 3 * 60 * 1000; // 3 minutes for testing
-  const oneMinute = 1 * 60 * 1000;     // 1 minute for testing
-  const expirationTime = 7 * 60 * 1000; // 7 minutes in milliseconds
+  const expirationTime = 7 * 24 * 60 * 60 * 1000; // 7 days
   const currentTime = Date.now();
 
-  const threeMinutesLeft = await db.collection("users").find({
+  const threeDaysLeft = await db.collection("users").find({
     verifiedEmail: false,
-    created: { $gte: currentTime - expirationTime, $lt: currentTime - (expirationTime - threeMinutes) },
+    created: { $gte: currentTime - expirationTime, $lt: currentTime - (expirationTime - (3 * 24 * 60 * 60 * 1000)) }, //3 days
   }).toArray();
 
-  for (const user of threeMinutesLeft) {
+  for (const user of threeDaysLeft) {
     await sendReminderEmail(user.email, user.username, 3);
   }
 
-  const oneMinuteLeft = await db.collection("users").find({
+  const oneDayLeft = await db.collection("users").find({
     verifiedEmail: false,
-    created: { $gte: currentTime - expirationTime, $lt: currentTime - (expirationTime - oneMinute) },
+    created: { $gte: currentTime - expirationTime, $lt: currentTime - (expirationTime - (1 * 24 * 60 * 60 * 1000)) }, //1 day
   }).toArray();
 
-  for (const user of oneMinuteLeft) {
+  for (const user of oneDayLeft) {
     await sendReminderEmail(user.email, user.username, 1);
   }
 
@@ -37,10 +35,6 @@ const handleUnverifiedUsers = async (db) => {
     verifiedEmail: false,
     created: { $lt: currentTime - expirationTime },
   });
-
-  if (result.deletedCount > 0) {
-    console.log(`Deleted ${result.deletedCount} unverified users.`);
-  }
 };
 
 module.exports = {

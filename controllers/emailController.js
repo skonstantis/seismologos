@@ -22,26 +22,12 @@ const sendVerificationEmail = async (email, username, token) => {
         <p>Ευχαριστούμε για την εγγραφή σας στο seismologos.gr.</p>
         <p>Για να επιβεβαιώσετε το e-mail σας, παρακαλούμε επιλέξτε 'Επιβεβαίωση e-mail' παρακάτω.</p>
         <a href="http://${process.env.HOST}/validate/verify-email?token=${token}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Επιβεβαίωση e-mail</a>
-        <p>Αν δεν κάνατε εσείς την εγγραφή, μπορείτε να αγνοήσετε αυτό το e-mail.</p>
-        <p><strong>Σημαντικό:</strong> Έχετε <strong>7 ημέρες</strong> για να επιβεβαιώσετε το e-mail σας. Μετά από 7 ημέρες, ο λογαριασμός σας θα διαγραφεί αυτόματα, και θα πρέπει να δημιουργήσετε έναν νέο.</p>
+        <p>Αν δεν κάνατε εσείς την εγγραφή, αγνοήστε το παρόν e-mail.</p>
+        <p><strong>Σημαντικό:</strong> Έχετε <strong>7 ημέρες</strong> για να επιβεβαιώσετε το e-mail σας. Μετά από 7 ημέρες, ο λογαριασμός σας θα διαγραφεί αυτόματα, και θα πρέπει να δημιουργήσετε νέο.</p>
         <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
         <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">
         <p style="font-size: 12px; color: #888; text-align: center">Αυτό το μήνυμα στάλθηκε αυτόματα από το seismologos.gr.<br>Παρακαλούμε μην απαντήσετε σε αυτό το e-mail.<br>Για οποιαδήποτε πληροφορία επικοινωνήστε μαζί μας στο support@seismologos.gr</p>
       </div>
-      <style>
-        @media only screen and (max-width: 600px) {
-          h2 {
-            font-size: 20px;
-          }
-          p {
-            font-size: 14px;
-          }
-          a {
-            font-size: 15px;
-            padding: 8px 16px;
-          }
-        }
-      </style>
     `,
   };
 
@@ -52,7 +38,7 @@ const sendVerificationEmail = async (email, username, token) => {
   }
 };
 
-const sendReminderEmail = async (email, username, minutesLeft) => {
+const sendReminderEmail = async (email, username, daysLeft) => {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: process.env.EMAIL_PORT,
@@ -63,17 +49,19 @@ const sendReminderEmail = async (email, username, minutesLeft) => {
     },
   });
 
+  const dayText = daysLeft === 1 ? "ημέρα" : "ημέρες";
+
   const mailOptions = {
     from: process.env.EMAIL,
     to: email,
-    subject: `Υπενθύμιση: ${minutesLeft} λεπτά για την επιβεβαίωση του e-mail σας`,
+    subject: `Υπενθύμιση: ${daysLeft} ${dayText} για την επιβεβαίωση του e-mail σας`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #dcdcdc; border-radius: 10px;">
         <h2 style="color: #333;">Αγαπητέ/ή ${username},</h2>
-        <p>Σας υπενθυμίζουμε ότι έχετε ${minutesLeft} λεπτά για να επιβεβαιώσετε το e-mail σας στο seismologos.gr.</p>
+        <p>Σας υπενθυμίζουμε ότι έχετε ${daysLeft} ${dayText} για να επιβεβαιώσετε το e-mail σας στο seismologos.gr.</p>
         <p>Παρακαλούμε επιβεβαιώστε το e-mail σας για να μπορέσετε να χρησιμοποιήσετε όλες τις δυνατότητες της πλατφόρμας μας.</p>
         <a href="http://${process.env.HOST}/validate/verify-email" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Επιβεβαίωση e-mail</a>
-        <p>Αν δεν κάνατε εσείς την εγγραφή, μπορείτε να αγνοήσετε αυτό το e-mail.</p>
+        <p>Αν δεν κάνατε εσείς την εγγραφή, αγνοήστε το παρόν e-mail.</p>
         <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
         <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">
         <p style="font-size: 12px; color: #888; text-align: center">Αυτό το μήνυμα στάλθηκε αυτόματα από το seismologos.gr.<br>Παρακαλούμε μην απαντήσετε σε αυτό το e-mail.<br>Για οποιαδήποτε πληροφορία επικοινωνήστε μαζί μας στο support@seismologos.gr</p>
@@ -107,7 +95,7 @@ const sendDeletionEmail = async (email, username) => {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #dcdcdc; border-radius: 10px;">
         <h2 style="color: #333;">Αγαπητέ/ή ${username},</h2>
         <p>Δυστυχώς, επειδή δεν επιβεβαιώσατε το e-mail σας εντός της προβλεπόμενης χρονικής περιόδου, ο λογαριασμός σας στο seismologos.gr έχει διαγραφεί.</p>
-        <p>Αν επιθυμείτε να χρησιμοποιήσετε ξανά τις υπηρεσίες μας, παρακαλούμε δημιουργήστε έναν νέο λογαριασμό.</p>
+        <p>Αν επιθυμείτε να χρησιμοποιήσετε ξανά τις υπηρεσίες μας, παρακαλούμε δημιουργήστε νέο.</p>
         <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
         <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">
         <p style="font-size: 12px; color: #888; text-align: center">Αυτό το μήνυμα στάλθηκε αυτόματα από το seismologos.gr.<br>Παρακαλούμε μην απαντήσετε σε αυτό το e-mail.<br>Για οποιαδήποτε πληροφορία επικοινωνήστε μαζί μας στο support@seismologos.gr</p>
