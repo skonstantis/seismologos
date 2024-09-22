@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const { ObjectId } = require("mongodb");
 const { logger } = require("../config/logger");
 const fetch = require("node-fetch");
+const jwt = require('jsonwebtoken');
 
 const getUsers = async (req, res) => {
   const db = req.app.locals.db;
@@ -102,10 +103,12 @@ const createUser = async (req, res) => {
 
     const result = await db.collection("users").insertOne(user);
 
+    const token = jwt.sign({ userId: result.insertedId }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
     await sendVerificationEmail(
       user.email,
       user.username,
-      result.insertedId,
+      token,
       req.headers.host
     );
 
@@ -118,7 +121,7 @@ const createUser = async (req, res) => {
   }
 };
 
-const sendVerificationEmail = async (email, username, userId, host) => {
+const sendVerificationEmail = async (email, username, token, host) => {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: process.env.EMAIL_PORT,
@@ -138,7 +141,7 @@ const sendVerificationEmail = async (email, username, userId, host) => {
         <h2 style="color: #333;">Καλωσορίσατε, ${username}!</h2>
         <p>Ευχαριστούμε για την εγγραφή σας στο seismologos.gr.</p>
         <p>Για να επιβεβαιώσετε το email σας, παρακαλούμε επιλέξτε 'Επιβεβαίωση Email' παρακάτω.</p>
-        <a href="http://${host}/confirm-email?token=${userId}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Επιβεβαίωση Email</a>
+        <a href="http://${host}/verify-email?token=${token}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Επιβεβαίωση Email</a>
         <p>Αν δεν κάνατε εσείς την εγγραφή, αγνοήστε αυτό το email.</p>
         <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
         <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">
@@ -159,7 +162,7 @@ const sendVerificationEmail = async (email, username, userId, host) => {
         }
       </style>
     `,
-  };  
+  };
 
   try {
     await transporter.sendMail(mailOptions);

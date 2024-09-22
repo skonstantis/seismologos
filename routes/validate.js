@@ -14,4 +14,9 @@ router.post(
   validationController.validateUser
 );
 
+router.get(
+  "/verify-email",
+  validationController.verifyEmail
+);
+
 module.exports = router;
