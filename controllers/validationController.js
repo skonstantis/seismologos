@@ -17,7 +17,12 @@ const validateUser = async (req, res) => {
     }
       
     if (!user.username || !user.email || !user.password) {
-      errors = errors.filter(error => error.path !== "username");
+      if(!user.username)
+        errors = errors.filter(error => error.path !== "username");
+      if(!user.email)
+        errors = errors.filter(error => error.path !== "email");  
+      if(!user.password)
+        errors = errors.filter(error => error.path !== "password");
       errors.push({ msg: 'Συμπληρώστε όλα τα πεδία της φόρμας'});
     }
 
