@@ -4,6 +4,7 @@ const { logger } = require("../config/logger");
 const fetch = require("node-fetch");
 const jwt = require('jsonwebtoken');
 const { sendVerificationEmail } = require("./emailController");
+const { containsSwearWord } = require("../helpers/containsSwearWords");
 
 const getUsers = async (req, res) => {
   const db = req.app.locals.db;
@@ -88,6 +89,10 @@ const createUser = async (req, res) => {
 
     if (await db.collection("users").findOne({ email: user.email })) {
       errors.push({ msg: "Το email " + user.email + " χρησιμοποιείται ήδη" });
+    }
+
+    if (containsSwearWord(user.username)) {
+      errors.push({ msg: "Το όνομα χρήστη περιέχει απαγορευμένες λέξεις" });
     }
 
     if (errors.length > 0) {
