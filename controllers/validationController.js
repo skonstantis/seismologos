@@ -1,6 +1,7 @@
 const { logger } = require("../config/logger");
 const { ObjectId } = require("mongodb");
 const jwt = require('jsonwebtoken');
+const { sendVerifiedEmail } = require("./emailController");
 
 const validateUser = async (req, res) => {
   const db = req.app.locals.db;
@@ -71,6 +72,8 @@ const verifyEmail = async (req, res) => {
         }
       }
     );
+
+    sendVerifiedEmail(user.email, user.username);
 
     res.status(200).send('Email verified successfully!');
   } catch (err) {

@@ -38,6 +38,43 @@ const sendVerificationEmail = async (email, username, token) => {
   }
 };
 
+const sendVerifiedEmail = async (email, username) => {
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
+  const mailOptions = {
+    from: process.env.EMAIL,
+    to: email,
+    subject: "Το e-mail σας επιβεβαιώθηκε επιτυχώς!",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #dcdcdc; border-radius: 10px;">
+        <h2 style="color: #333;">${username},</h2>
+        <p>Ευχαριστούμε για την επιβεβαίωση της διεύθυνσης e-mail σας.</p>
+        <p>Ο λογαριασμός σας έχει πλέον ενεργοποιηθεί και μπορείτε να εισέλθετε.</p>
+        <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
+        <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">
+        <p style="font-size: 12px; color: #888; text-align: center;">
+          Αυτό το μήνυμα στάλθηκε αυτόματα από το seismologos.gr.<br>
+          Παρακαλούμε μην απαντήσετε σε αυτό το e-mail.<br>
+          Για οποιαδήποτε πληροφορία επικοινωνήστε μαζί μας στο support@seismologos.gr
+        </p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    logger.error("EMAIL ERROR:", error);
+  }
+};
+
 const sendReminderEmail = async (email, username, daysLeft, token) => {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
@@ -113,6 +150,7 @@ const sendDeletionEmail = async (email, username) => {
 
 module.exports = {
   sendVerificationEmail,
+  sendVerifiedEmail,
   sendReminderEmail,
   sendDeletionEmail,
 };
