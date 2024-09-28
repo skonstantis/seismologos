@@ -13,7 +13,7 @@ const getUsers = async (req, res) => {
   try {
     const elements = await db
       .collection("users")
-      .find({}, { projection: { password: 0 }, projection: { loginTokens: 0 }, projection: { lockedUntil: 0 }, projection: { wrongPassword: 0 } })
+      .find({}, { projection: { username: 1, email: 1, created: 1, verified: 1, lastLogin: 1 } })
       .skip(page * elementsPerPage)
       .limit(elementsPerPage)
       .sort()
@@ -34,7 +34,7 @@ const getUserById = async (req, res) => {
   try {
     const doc = await db
       .collection("users")
-      .findOne({ _id: new ObjectId(id) }, { projection: { password: 0 }, projection: { loginTokens: 0 }, projection: { lockedUntil: 0 }, projection: { wrongPassword: 0 } });
+      .findOne({ projection: { username: 1, email: 1, created: 1, verified: 1, lastLogin: 1 } });
     if (!doc) {
       return res
         .status(404)
