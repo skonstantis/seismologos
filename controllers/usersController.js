@@ -89,7 +89,7 @@ const loginUser =  async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       await db.collection('users').updateOne(
-        { _id: new ObjectId(user.userId) },
+        { _id: new ObjectId(user._id) },
         {
           $inc: {
             wrongPassword: 1
@@ -100,7 +100,7 @@ const loginUser =  async (req, res) => {
       if(user.wrongPassword >= 10)
       {
         await db.collection('users').updateOne(
-          { _id: new ObjectId(user.userId) },
+          { _id: new ObjectId(user._id) },
           {
             $set: {
               lockedUntil: Date.now() + 1000 * 60 * 60 * 24,
@@ -120,7 +120,7 @@ const loginUser =  async (req, res) => {
     }
     
     await db.collection('users').updateOne(
-      { _id: new ObjectId(user.userId) },
+      { _id: new ObjectId(user._id) },
       {
         $set: {
           lastLogin: Date.now(),
