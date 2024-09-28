@@ -53,19 +53,14 @@ const getUserById = async (req, res) => {
 const loginUser = async (req, res) => {
   const db = req.app.locals.db;
   const { key, password } = req.body || {};
-  const errors = req.validationErrors || [];
 
   try {
     if (!key) {
-      errors.push({ msg: "Key (username or email) is required" });
+      return res.status(400).json({ errors: [{ msg: "Εισάγετε Όνομα Χρήστη ή e-mail" }] });
     }
 
     if (!password) {
-      errors.push({ msg: "Password is required" });
-    }
-
-    if (errors.length > 0) {
-      return res.status(400).json({ errors });
+      return res.status(400).json({ errors: [{ msg: "Εισάγετε Κωδικό Πρόσβασης" }] });
     }
 
     const user = await db.collection("users").findOne({
@@ -74,12 +69,12 @@ const loginUser = async (req, res) => {
 
     if (!user) {
       return res.status(400).json({
-        errors: [{ msg: key.includes("@") ? "Δεν υπάρχει χρήστης με αυτό το e-mail" : "Δεν υπάρχει χρήστης με αυτό το username" }]
+        errors: [{ msg: key.includes("@") ? "Δεν υπάρχει χρήστης με αυτό το e-mail" : "Δεν υπάρχει χρήστης με αυτό το Όνομα Χρήστη" }]
       });
     }
 
     if (user.verified == null) {
-      return res.status(400).json({ errors: [{ msg: "Επιβεβαιώστε τη διεύθυνση email για να ενεργοποιηθεί ο λογαριασμός σας" }] });
+      return res.status(400).json({ errors: [{ msg: "Επιβεβαιώστε τη διεύθυνση e-mail για να ενεργοποιηθεί ο λογαριασμός σας" }] });
     }
 
     if (user.lockedUntil && Date.now() < user.lockedUntil) {
