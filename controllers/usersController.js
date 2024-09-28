@@ -107,6 +107,14 @@ const loginUser = async (req, res) => {
         );
       }
     }
+
+    if (user.loginToken) {
+      try {
+        jwt.verify(user.loginToken, process.env.JWT_LOGIN_SECRET);
+        return res.status(400).json({ errors: [{ msg: "Ο χρήστης είναι ήδη συνδεδεμένος" }] });
+      } catch (err) {
+      }
+    }
       
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
@@ -131,14 +139,6 @@ const loginUser = async (req, res) => {
       }
 
       return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός" }] });
-    }
-
-    if (user.loginToken) {
-      try {
-        jwt.verify(user.loginToken, process.env.JWT_LOGIN_SECRET);
-        return res.status(400).json({ errors: [{ msg: "Ο χρήστης είναι ήδη συνδεδεμένος" }] });
-      } catch (err) {
-      }
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_LOGIN_SECRET, { expiresIn: '1h' });
