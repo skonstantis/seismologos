@@ -97,7 +97,7 @@ const loginUser =  async (req, res) => {
         }
       );
 
-      if(user.wrongPassword >= 10)
+      if(user.wrongPassword >= 9)
       {
         await db.collection('users').updateOne(
           { _id: new ObjectId(user._id) },
@@ -111,9 +111,9 @@ const loginUser =  async (req, res) => {
         return res.status(400).json({ errors: [{ msg: "Ο λογαριασμός σας έχει κλειδωθεί για 24 ώρες" }] });
       }
 
-      if(user.wrongPassword >= 5)
+      if(user.wrongPassword >= 4)
       {
-        return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός. Έχετε ακόμη" + 10 - user.wrongPassword + "προσπάθειες πρωτού ο λογαριασμός σας κλειδωθεί για 24 ώρες" }] });
+        return res.status(400).json({ errors: [{ msg: ("Ο κωδικός πρόσβασης δεν είναι σωστός και έχετε ακόμη " + (9 - user.wrongPassword) + ((10 - user.wrongPassword) == 1 ? " προσπάθεια" : " προσπάθειες") +  " πρωτού ο λογαριασμός σας κλειδωθεί για 24 ώρες") }] });
       }
 
       return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός" }] });
