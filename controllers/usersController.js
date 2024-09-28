@@ -158,7 +158,7 @@ const loginUser = async (req, res) => {
         $set: {
           lastLogin: Date.now(),
           wrongPassword: 0,
-          loginTokens: [...loginTokens, token]
+          loginTokens: [...user.loginTokens, token]
         },
         $inc: { timesLoggedIn: 1 }
       }
