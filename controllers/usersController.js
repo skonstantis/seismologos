@@ -123,7 +123,7 @@ const loginUser = async (req, res) => {
       }
 
       if (updatedUser.wrongPassword >= 5) {
-        return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός. Έχετε ακόμη " + (10 - updatedUser.wrongPassword) + " προσπάθειες πρωτού ο λογαριασμός σας κλειδωθεί για 24 ώρες" }] });
+        return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός. Έχετε ακόμη " + (10 - updatedUser.wrongPassword) + ((10 - updatedUser.wrongPassword) == 1 ? " προσπάθεια " : " προσπάθειες") + " πρωτού ο λογαριασμός σας κλειδωθεί για 24 ώρες" }] });
       }
 
       return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός" }] });
