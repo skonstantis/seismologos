@@ -47,7 +47,7 @@ const verifyEmail = async (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_VERIFICATION_SECRET);
     const userId = decoded.userId; 
 
     const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
@@ -68,7 +68,8 @@ const verifyEmail = async (req, res) => {
           lastLogin: null,
           timesLoggedIn: 0,
           wrongPassword: 0,
-          lockedUntil: null
+          lockedUntil: null,
+          loginToken: null
         },
         $unset: {
           threeDaysVerificationNotification: "",

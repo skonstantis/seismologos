@@ -50,22 +50,18 @@ const getUserById = async (req, res) => {
   }
 };
 
-const loginUser =  async (req, res) => {
+const loginUser = async (req, res) => {
   const db = req.app.locals.db;
   const { key, password } = req.body || {};
   const errors = req.validationErrors || [];
 
-  try{
+  try {
     if (!key) {
-      errors.push({
-        msg: "Key (username or email) is required",
-      });
+      errors.push({ msg: "Key (username or email) is required" });
     }
 
     if (!password) {
-      errors.push({
-        msg: "Password is required",
-      });
+      errors.push({ msg: "Password is required" });
     }
 
     if (errors.length > 0) {
@@ -77,71 +73,92 @@ const loginUser =  async (req, res) => {
     });
 
     if (!user) {
-      if(key.includes("@"))
+      if (key.includes("@"))
         return res.status(400).json({ errors: [{ msg: "Δεν υπάρχει χρήστης με αυτό το e-mail" }] });
       else
         return res.status(400).json({ errors: [{ msg: "Δεν υπάρχει χρήστης με αυτό το username" }] });
     }
 
-    if(user.verified == null)
+    if (user.verified == null)
       return res.status(400).json({ errors: [{ msg: "Επιβεβαιώστε τη διεύθυνση email για να ενεργοποιηθεί ο λογαριασμός σας" }] });
 
+      if (user.lockedUntil)
+      {
+        if(Date.now() < user.lockedUntil) {
+        const lockedUntilDate = new Date(user.lockedUntil);
+        const formattedLockedUntilGreekTime = lockedUntilDate.toLocaleString('el-GR', {
+          timeZone: 'Europe/Athens',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+  
+        return res.status(403).json({ errors: [{ msg: `Ο λογαριασμός σας είναι κλειδωμένος μέχρι ${formattedLockedUntilGreekTime}` }] });
+      }
+      else
+      {
+        await db.collection('users').updateOne(
+          { _id: new ObjectId(user._id) },
+          { $set: { lockedUntil: null } }
+        );
+      }
+    }
+      
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       await db.collection('users').updateOne(
         { _id: new ObjectId(user._id) },
-        {
-          $inc: {
-            wrongPassword: 1
-          }
-        }
+        { $inc: { wrongPassword: 1 } }
       );
 
-      if(user.wrongPassword >= 9)
-      {
+      const updatedUser = await db.collection('users').findOne({ _id: new ObjectId(user._id) });
+
+      if (updatedUser.wrongPassword >= 10) {
         await db.collection('users').updateOne(
-          { _id: new ObjectId(user._id) },
-          {
-            $set: {
-              lockedUntil: Date.now() + 1000 * 60 * 60 * 24,
-              wrongPassword: 0
-            }
-          }
+          { _id: new ObjectId(updatedUser._id) },
+          { $set: { lockedUntil: Date.now() + 1000 * 60 * 60 * 24, wrongPassword: 0 } }
         );
+        //send email
         return res.status(400).json({ errors: [{ msg: "Ο λογαριασμός σας έχει κλειδωθεί για 24 ώρες" }] });
       }
 
-      if(user.wrongPassword >= 4)
-      {
-        return res.status(400).json({ errors: [{ msg: ("Ο κωδικός πρόσβασης δεν είναι σωστός και έχετε ακόμη " + (9 - user.wrongPassword) + ((10 - user.wrongPassword) == 1 ? " προσπάθεια" : " προσπάθειες") +  " πρωτού ο λογαριασμός σας κλειδωθεί για 24 ώρες") }] });
+      if (updatedUser.wrongPassword >= 5) {
+        return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός. Έχετε ακόμη " + (10 - updatedUser.wrongPassword) + " προσπάθειες πρωτού ο λογαριασμός σας κλειδωθεί για 24 ώρες" }] });
       }
 
       return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός" }] });
     }
-    
+
+    if (user.loginToken) {
+      try {
+        jwt.verify(user.loginToken, process.env.JWT_LOGIN_SECRET);
+        return res.status(400).json({ errors: [{ msg: "Ο χρήστης είναι ήδη συνδεδεμένος" }] });
+      } catch (err) {
+      }
+    }
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_LOGIN_SECRET, { expiresIn: '1h' });
+
     await db.collection('users').updateOne(
       { _id: new ObjectId(user._id) },
       {
         $set: {
           lastLogin: Date.now(),
-          wrongPassword: 0
+          wrongPassword: 0,
+          loginToken: token
         },
-        $inc: {
-          timesLoggedIn: 1
-        }
+        $inc: { timesLoggedIn: 1 }
       }
     );
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
     res.json({ token });
-  }
-  catch(err)
-  {
+  } catch (err) {
     logger.error("DATABASE ERROR:", err);
-    res
-      .status(500)
-      .json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });
+    res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });
   }
 };
 
@@ -200,7 +217,7 @@ const createUser = async (req, res) => {
 
     const result = await db.collection("users").insertOne(user);
 
-    const token = jwt.sign({ userId: result.insertedId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: result.insertedId }, process.env.JWT_VERIFICATION_SECRET, { expiresIn: '7d' });
 
     await sendVerificationEmail(
       user.email,
