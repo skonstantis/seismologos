@@ -73,41 +73,38 @@ const loginUser = async (req, res) => {
     });
 
     if (!user) {
-      if (key.includes("@"))
-        return res.status(400).json({ errors: [{ msg: "Δεν υπάρχει χρήστης με αυτό το e-mail" }] });
-      else
-        return res.status(400).json({ errors: [{ msg: "Δεν υπάρχει χρήστης με αυτό το username" }] });
+      return res.status(400).json({
+        errors: [{ msg: key.includes("@") ? "Δεν υπάρχει χρήστης με αυτό το e-mail" : "Δεν υπάρχει χρήστης με αυτό το username" }]
+      });
     }
 
-    if (user.verified == null)
+    if (user.verified == null) {
       return res.status(400).json({ errors: [{ msg: "Επιβεβαιώστε τη διεύθυνση email για να ενεργοποιηθεί ο λογαριασμός σας" }] });
-
-      if (user.lockedUntil)
-      {
-        if(Date.now() < user.lockedUntil) {
-        const lockedUntilDate = new Date(user.lockedUntil);
-        const formattedLockedUntilGreekTime = lockedUntilDate.toLocaleString('el-GR', {
-          timeZone: 'Europe/Athens',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false
-        });
-  
-        return res.status(403).json({ errors: [{ msg: `Ο λογαριασμός σας είναι κλειδωμένος μέχρι ${formattedLockedUntilGreekTime}` }] });
-      }
-      else
-      {
-        await db.collection('users').updateOne(
-          { _id: new ObjectId(user._id) },
-          { $set: { lockedUntil: null } }
-        );
-      }
     }
-      
+
+    if (user.lockedUntil && Date.now() < user.lockedUntil) {
+      const lockedUntilDate = new Date(user.lockedUntil);
+      const formattedLockedUntilGreekTime = lockedUntilDate.toLocaleString('el-GR', {
+        timeZone: 'Europe/Athens',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+
+      return res.status(403).json({ errors: [{ msg: `Ο λογαριασμός σας είναι κλειδωμένος μέχρι ${formattedLockedUntilGreekTime}` }] });
+    }
+
+    if (user.lockedUntil) {
+      await db.collection('users').updateOne(
+        { _id: new ObjectId(user._id) },
+        { $set: { lockedUntil: null } }
+      );
+    }
+
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       await db.collection('users').updateOne(
@@ -122,7 +119,6 @@ const loginUser = async (req, res) => {
           { _id: new ObjectId(updatedUser._id) },
           { $set: { lockedUntil: Date.now() + 1000 * 60 * 60 * 24, wrongPassword: 0, loginTokens: [] } }
         );
-        //send email
         return res.status(400).json({ errors: [{ msg: "Ο λογαριασμός σας έχει κλειδωθεί για 24 ώρες" }] });
       }
 
@@ -133,32 +129,31 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός" }] });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_LOGIN_SECRET, { expiresIn: '1h' });
-
-    if (user.loginTokens && user.loginTokens.length > 0) {
+    if (user.loginTokens.length > 0) {
       user.loginTokens = user.loginTokens.filter((token) => {
         try {
           jwt.verify(token, process.env.JWT_LOGIN_SECRET);
           return true; 
         } catch (err) {
-          console.error("Removing expired or invalid token:", token, err.message);
           return false; 
         }
       });
-      
+
       await db.collection('users').updateOne(
         { _id: user._id },
         { $set: { loginTokens: user.loginTokens } }
       );
     }
-    
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_LOGIN_SECRET, { expiresIn: '1h' });
+
     await db.collection('users').updateOne(
       { _id: new ObjectId(user._id) },
       {
         $set: {
           lastLogin: Date.now(),
           wrongPassword: 0,
-          loginTokens: [...user.loginTokens, token]
+          loginTokens: [...user.loginTokens, token] 
         },
         $inc: { timesLoggedIn: 1 }
       }
@@ -170,6 +165,7 @@ const loginUser = async (req, res) => {
     res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });
   }
 };
+
 
 const createUser = async (req, res) => {
   const db = req.app.locals.db;
