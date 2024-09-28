@@ -34,7 +34,7 @@ const getUserById = async (req, res) => {
   try {
     const doc = await db
       .collection("users")
-      .findOne({ _id: new ObjectId(id) }, { projection: { password: 0 } });
+      .findOne({ _id: new ObjectId(id) }, { projection: { password: 0 }, projection: { loginTokens: 0 }, projection: { lockedUntil: 0 }, projection: { wrongPassword: 0 } });
     if (!doc) {
       return res
         .status(404)
