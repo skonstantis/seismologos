@@ -107,14 +107,6 @@ const loginUser = async (req, res) => {
         );
       }
     }
-
-    if (user.loginToken) {
-      try {
-        jwt.verify(user.loginToken, process.env.JWT_LOGIN_SECRET);
-        return res.status(400).json({ errors: [{ msg: "Ο χρήστης είναι ήδη συνδεδεμένος" }] });
-      } catch (err) {
-      }
-    }
       
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
@@ -128,7 +120,7 @@ const loginUser = async (req, res) => {
       if (updatedUser.wrongPassword >= 10) {
         await db.collection('users').updateOne(
           { _id: new ObjectId(updatedUser._id) },
-          { $set: { lockedUntil: Date.now() + 1000 * 60 * 60 * 24, wrongPassword: 0, loginToken: null } }
+          { $set: { lockedUntil: Date.now() + 1000 * 60 * 60 * 24, wrongPassword: 0, loginTokens: [] } }
         );
         //send email
         return res.status(400).json({ errors: [{ msg: "Ο λογαριασμός σας έχει κλειδωθεί για 24 ώρες" }] });
@@ -143,13 +135,30 @@ const loginUser = async (req, res) => {
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_LOGIN_SECRET, { expiresIn: '1h' });
 
+    if (user.loginTokens && user.loginTokens.length > 0) {
+      user.loginTokens = user.loginTokens.filter((token) => {
+        try {
+          jwt.verify(token, process.env.JWT_LOGIN_SECRET);
+          return true; 
+        } catch (err) {
+          console.error("Removing expired or invalid token:", token, err.message);
+          return false; 
+        }
+      });
+      
+      await db.collection('users').updateOne(
+        { _id: user._id },
+        { $set: { loginTokens: user.loginTokens } }
+      );
+    }
+    
     await db.collection('users').updateOne(
       { _id: new ObjectId(user._id) },
       {
         $set: {
           lastLogin: Date.now(),
           wrongPassword: 0,
-          loginToken: token
+          loginTokens: [...loginTokens, token]
         },
         $inc: { timesLoggedIn: 1 }
       }

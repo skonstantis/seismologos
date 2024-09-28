@@ -69,7 +69,7 @@ const verifyEmail = async (req, res) => {
           timesLoggedIn: 0,
           wrongPassword: 0,
           lockedUntil: null,
-          loginToken: null
+          loginTokens: []
         },
         $unset: {
           threeDaysVerificationNotification: "",
