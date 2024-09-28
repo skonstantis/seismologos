@@ -128,7 +128,7 @@ const loginUser = async (req, res) => {
       if (updatedUser.wrongPassword >= 10) {
         await db.collection('users').updateOne(
           { _id: new ObjectId(updatedUser._id) },
-          { $set: { lockedUntil: Date.now() + 1000 * 60 * 60 * 24, wrongPassword: 0 } }
+          { $set: { lockedUntil: Date.now() + 1000 * 60 * 60 * 24, wrongPassword: 0, loginToken: null } }
         );
         //send email
         return res.status(400).json({ errors: [{ msg: "Ο λογαριασμός σας έχει κλειδωθεί για 24 ώρες" }] });
