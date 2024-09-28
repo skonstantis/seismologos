@@ -50,6 +50,101 @@ const getUserById = async (req, res) => {
   }
 };
 
+const loginUser =  async (req, res) => {
+  const db = req.app.locals.db;
+  const { key, password } = req.body || {};
+  const errors = req.validationErrors || [];
+
+  try{
+    if (!key) {
+      errors.push({
+        msg: "Key (username or email) is required",
+      });
+    }
+
+    if (!password) {
+      errors.push({
+        msg: "Password is required",
+      });
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
+
+    const user = await db.collection("users").findOne({
+      $or: [{ username: key }, { email: key }]
+    });
+
+    if (!user) {
+      if(key.includes("@"))
+        return res.status(400).json({ errors: [{ msg: "Δεν υπάρχει χρήστης με αυτό το e-mail" }] });
+      else
+        return res.status(400).json({ errors: [{ msg: "Δεν υπάρχει χρήστης με αυτό το username" }] });
+    }
+
+    if(user.verified == null)
+      return res.status(400).json({ errors: [{ msg: "Επιβεβαιώστε τη διεύθυνση email για να ενεργοποιηθεί ο λογαριασμός σας" }] });
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      await db.collection('users').updateOne(
+        { _id: new ObjectId(user.userId) },
+        {
+          $inc: {
+            wrongPassword: 1
+          }
+        }
+      );
+
+      if(user.wrongPassword >= 10)
+      {
+        await db.collection('users').updateOne(
+          { _id: new ObjectId(user.userId) },
+          {
+            $set: {
+              lockedUntil: Date.now() + 1000 * 60 * 60 * 24,
+              wrongPassword: 0
+            }
+          }
+        );
+        return res.status(400).json({ errors: [{ msg: "Ο λογαριασμός σας έχει κλειδωθεί για 24 ώρες" }] });
+      }
+
+      if(user.wrongPassword >= 5)
+      {
+        return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός. Έχετε ακόμη" + 10 - user.wrongPassword + "προσπάθειες πρωτού ο λογαριασμός σας κλειδωθεί για 24 ώρες" }] });
+      }
+
+      return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός" }] });
+    }
+    
+    await db.collection('users').updateOne(
+      { _id: new ObjectId(user.userId) },
+      {
+        $set: {
+          lastLogin: Date.now(),
+          wrongPassword: 0
+        },
+        $inc: {
+          timesLoggedIn: 1
+        }
+      }
+    );
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    res.json({ token });
+  }
+  catch(err)
+  {
+    logger.error("DATABASE ERROR:", err);
+    res
+      .status(500)
+      .json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });
+  }
+};
+
 const createUser = async (req, res) => {
   const db = req.app.locals.db;
   const user = req.body;
@@ -220,6 +315,7 @@ module.exports = {
   getUsers,
   getUserById,
   createUser,
+  loginUser,
   updateUser,
   deleteUser,
 };

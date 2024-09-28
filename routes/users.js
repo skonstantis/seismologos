@@ -25,6 +25,11 @@ router.post(
   usersController.createUser
 );
 
+router.post(
+  "/login",
+  usersController.loginUser
+);
+
 router.patch(
   "/:id",
   validateUserIdParam,
