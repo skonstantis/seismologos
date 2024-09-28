@@ -13,7 +13,7 @@ const getUsers = async (req, res) => {
   try {
     const elements = await db
       .collection("users")
-      .find({}, { projection: { password: 0 } })
+      .find({}, { projection: { password: 0 }, projection: { loginTokens: 0 }, projection: { lockedUntil: 0 }, projection: { wrongPassword: 0 } })
       .skip(page * elementsPerPage)
       .limit(elementsPerPage)
       .sort()
