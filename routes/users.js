@@ -6,7 +6,6 @@ const {
 } = require("../middlewares/userValidation");
 const { handleValidationErrors } = require("../middlewares/errorHandler");
 const usersController = require("../controllers/usersController");
-const validationController = require("../controllers/validationController");
 
 const router = express.Router();
 
@@ -29,11 +28,6 @@ router.post(
 router.post(
   "/login",
   usersController.loginUser
-);
-
-router.post(
-  "/validateSession",
-  validationController.validateSession
 );
 
 router.patch(

@@ -14,6 +14,11 @@ router.post(
   validationController.validateUser
 );
 
+router.post(
+  "/session",
+  validationController.validateSession
+);
+
 router.get(
   "/verify-email",
   validationController.verifyEmail
