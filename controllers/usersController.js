@@ -123,6 +123,8 @@ const loginUser = async (req, res) => {
 
       return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός" }] });
     }
+    
+    const lastLogin = user.lastLogin;
 
     if (user.loginTokens.length > 0) {
       user.loginTokens = user.loginTokens.filter((token) => {
@@ -154,7 +156,7 @@ const loginUser = async (req, res) => {
       }
     );
 
-    res.json({ token: token, msg: "Session created", user: { id: user._id, username: user.username, email: user.email } });
+    res.json({ token: token, msg: "Session created", user: { id: user._id, username: user.username, email: user.email, lastLogin: lastLogin } });
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
     res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });
