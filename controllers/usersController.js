@@ -154,7 +154,7 @@ const loginUser = async (req, res) => {
       }
     );
 
-    res.json({ token });
+    res.json({ token: token, msg: "Session created", user: { id: user._id, username: user.username, email: user.email } });
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
     res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });

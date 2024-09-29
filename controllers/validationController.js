@@ -92,7 +92,64 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+const validateSession = async (req, res) => {
+  const db = req.app.locals.db;
+  const { token } = req.body || {};
+
+  try {
+    if (!token) {
+      return res.status(400).json({ errors: [{ msg: "ERROR: Token is missing" }] });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_LOGIN_SECRET);
+    } catch (err) {
+      return res.status(401).json({ errors: [{ msg: "ERROR: Invalid token" }] });
+    }
+
+    const user = await db.collection('users').findOne({ _id: new ObjectId(decoded.userId) });
+
+    if (!user) {
+      return res.status(404).json({ errors: [{ msg: "ERROR: User not found" }] });
+    }
+
+    if (!user.loginTokens.includes(token)) {
+      return res.status(401).json({ errors: [{ msg: "ERROR: Token is not valid" }] });
+    }
+
+    const validTokens = user.loginTokens.filter((userToken) => {
+      try {
+        return userToken !== token && jwt.verify(userToken, process.env.JWT_LOGIN_SECRET);
+      } catch (err) {
+        return false;
+      }
+    });
+
+    const newToken = jwt.sign({ userId: user._id }, process.env.JWT_LOGIN_SECRET, { expiresIn: '1h' });
+
+    await db.collection('users').updateOne(
+      { _id: new ObjectId(user._id) },
+      {
+        $set: {
+          lastLogin: Date.now(),
+          loginTokens: [...validTokens, newToken]
+        }
+      }
+    );
+
+    res.json({ token: newToken, msg: "Session extended", user: { id: user._id, username: user.username, email: user.email } });
+  } catch (err) {
+    logger.error("DATABASE ERROR:", err);
+    res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });
+  }
+};
+
+
+
+
 module.exports = {
   validateUser,
-  verifyEmail
+  verifyEmail, 
+  validateSession
 };
