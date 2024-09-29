@@ -127,6 +127,7 @@ const validateSession = async (req, res) => {
     });
 
     const newToken = jwt.sign({ userId: user._id }, process.env.JWT_LOGIN_SECRET, { expiresIn: '1h' });
+    
     await db.collection('users').updateOne(
       { _id: new ObjectId(user._id) },
       {
@@ -136,7 +137,7 @@ const validateSession = async (req, res) => {
       }
     );
 
-    res.json({ token: newToken, msg: "Session extended", user: { id: user._id, username: user.username, email: user.email, lastLogin: user.lastLogin } });
+    res.json({ token: newToken, msg: "Session extended", user: { id: user._id, username: user.username, email: user.email, lastLogin: lastLogin } });
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
     res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });
