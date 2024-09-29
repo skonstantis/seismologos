@@ -123,8 +123,6 @@ const loginUser = async (req, res) => {
 
       return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός" }] });
     }
-    
-    const lastLogin = user.lastLogin;
 
     if (user.loginTokens.length > 0) {
       user.loginTokens = user.loginTokens.filter((token) => {
@@ -143,7 +141,8 @@ const loginUser = async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_LOGIN_SECRET, { expiresIn: '1h' });
-
+    
+    const lastLogin = user.lastLogin;
     await db.collection('users').updateOne(
       { _id: new ObjectId(user._id) },
       {
