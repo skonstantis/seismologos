@@ -146,7 +146,7 @@ const validateSession = async (req, res) => {
 
 const changePassword = async (req, res) => {
   const db = req.app.locals.db;
-  const { token, purpose  } = req.query;
+  const { token } = req.query;
 
   if (!token) {
     return res.status(400).json({ errors: [{ msg: 'Token is missing' }] });
@@ -154,7 +154,7 @@ const changePassword = async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_PASSWORD_SECRET);
-    const userId = decoded.userId; 
+    const {userId, purpose} = decoded.userId; 
 
     if (purpose !== 'changePassword') {
       return res.status(403).json({ errors: [{ msg: 'Invalid token purpose' }] });
@@ -164,10 +164,6 @@ const changePassword = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ errors: [{ msg: 'User not found' }] });
-    }
-    
-    if (!user.changePassword) {
-      return res.status(403).json({ errors: [{ msg: 'Password change not authorized' }] });
     }
 
     res.status(200).send('Authorization granted');
