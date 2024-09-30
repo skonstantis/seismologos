@@ -3,7 +3,7 @@ const { ObjectId } = require("mongodb");
 const { logger } = require("../config/logger");
 const fetch = require("node-fetch");
 const jwt = require('jsonwebtoken');
-const { sendVerificationEmail } = require("./emailController");
+const { sendVerificationEmail, sendAccountLockedEmail } = require("./emailController");
 
 const getUsers = async (req, res) => {
   const db = req.app.locals.db;
@@ -114,6 +114,7 @@ const loginUser = async (req, res) => {
           { _id: new ObjectId(updatedUser._id) },
           { $set: { lockedUntil: Date.now() + 1000 * 60 * 60 * 24, wrongPassword: 0, loginTokens: [] } }
         );
+        sendAccountLockedEmail(user.email, user.username, 1)
         return res.status(400).json({ errors: [{ msg: "Ο λογαριασμός σας έχει κλειδωθεί για 24 ώρες" }] });
       }
 
