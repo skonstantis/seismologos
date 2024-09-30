@@ -182,6 +182,7 @@ const changePassword = async (req, res) => {
 const changePasswordValidated = async (req, res) => {
   const db = req.app.locals.db;
   const { token, password } = req.body;
+  const errors = req.validationErrors || [];
 
   if (!token) {
     return res.status(400).json({ errors: [{ msg: 'Token is missing' }] });
@@ -201,6 +202,9 @@ const changePasswordValidated = async (req, res) => {
       return res.status(404).json({ errors: [{ msg: 'User not found' }] });
     }
 
+    if(errors != [])
+      return res.status(400).json({ errors: errors });
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await db.collection('users').updateOne(
@@ -213,7 +217,7 @@ const changePasswordValidated = async (req, res) => {
       }
     );
     //password changed email
-    res.status(200).json('qqqq');
+    res.status(200).json('Success');
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
       return res.status(400).json({ errors: [{ msg: 'Token has expired' }] });
