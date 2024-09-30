@@ -166,7 +166,7 @@ const changePassword = async (req, res) => {
       return res.status(404).json({ errors: [{ msg: 'User not found' }] });
     }
 
-    res.status(200).send('Authorization granted');
+    res.status(200).json('Authorization granted');
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
       return res.status(400).json({ errors: [{ msg: 'Token has expired' }] });
