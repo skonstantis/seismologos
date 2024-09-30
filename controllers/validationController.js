@@ -146,7 +146,7 @@ const validateSession = async (req, res) => {
 
 const changePassword = async (req, res) => {
   const db = req.app.locals.db;
-  const { token } = req.query;
+  const { token, purpose  } = req.query;
 
   if (!token) {
     return res.status(400).json({ errors: [{ msg: 'Token is missing' }] });
