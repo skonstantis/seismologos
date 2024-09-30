@@ -1,7 +1,7 @@
 const { logger } = require("../config/logger");
 const { ObjectId } = require("mongodb");
 const jwt = require('jsonwebtoken');
-const { sendVerifiedEmail, sendPasswordChangedEmail } = require("./emailController");
+const { sendVerifiedEmail } = require("./emailController");
 const bcrypt = require("bcrypt");
 
 const validateUser = async (req, res) => {
@@ -182,11 +182,7 @@ const changePassword = async (req, res) => {
 const changePasswordValidated = async (req, res) => {
   const db = req.app.locals.db;
   const { token, password } = req.body;
-  
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+  const errors = req.validationErrors || [];
 
   if (!token) {
     return res.status(400).json({ errors: [{ msg: 'Token is missing' }] });
@@ -206,22 +202,26 @@ const changePasswordValidated = async (req, res) => {
       return res.status(404).json({ errors: [{ msg: 'User not found' }] });
     }
 
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const updatedUser = {
       ...user,
       password: hashedPassword,
-      lockedUntil: null,
       oldIds: user.oldIds ? [...user.oldIds, user._id] : [user._id], 
+      lockedUntil: null,
       _id: new ObjectId() 
     };
 
-    await db.collection('users').insertOne(updatedUser);
+    await db.collection('users').insertOne(updatedUser); 
 
     await db.collection('users').deleteOne({ _id: new ObjectId(userId) });
-
-    sendPasswordChangedEmail(updatedUser.email, updatedUser.username);
     
+    sendPasswordChangedEmail(updatedUser.email, updatedUser.username);
+
     res.status(200).json('Success');
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
@@ -233,6 +233,8 @@ const changePasswordValidated = async (req, res) => {
     res.status(500).json({ errors: [{ msg: 'DATABASE ERROR: Could not verify email' }] });
   }
 };
+
+
 
 module.exports = {
   validateUser,
