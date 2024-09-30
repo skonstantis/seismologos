@@ -126,7 +126,7 @@ const validateSession = async (req, res) => {
       }
     });
 
-    const newToken = jwt.sign({ userId: user._id }, process.env.JWT_LOGIN_SECRET, { expiresIn: '1h' });
+    const newToken = jwt.sign({ userId: user._id }, process.env.JWT_LOGIN_SECRET, { expiresIn: '6h' });
 
     await db.collection('users').updateOne(
       { _id: new ObjectId(user._id) },
