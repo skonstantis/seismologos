@@ -170,7 +170,7 @@ const sendAccountLockedEmail = async (email, username, token) => {
         <p>Εάν εσείς επιχειρήσατε τη σύνδεση, μπορείτε είτε να περιμένετε το απαιτούμενο χρονικό διάστημα και να προσπαθήσετε ξανά να συνδεθείτε, είτε να αλλάξετε τον κωδικό σας πατώντας το κουμπί 'Αλλαγή Κωδικού Πρόσβασης'. Στην δεύτερη περίπτωση ο λογαριασμός σας θα είναι άμεσα προσβάσιμος.</P>
         <P><b>Εάν δεν ήσασταν εσείς που επιχειρήσατε την είσοδο</b>, σας προτείνουμε να αλλάξετε τον κωδικό προσβασής σας το συντομότερο δυνατόν.</p>
         <p>Ο παρακάτω σύνδεσμος ισχύει για 24 ώρες.</p>
-        <a href="http://${process.env.HOST}/validate/change-password?token=${token}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Αλλαγή Κωδικού Πρόσβασης</a>
+        <a href="http://${process.env.CLIENT}/change-password?token=${token}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Αλλαγή Κωδικού Πρόσβασης</a>
         <p>Για οποιαδήποτε πληροφορία ή βοήθεια, παρακαλούμε επικοινωνήστε μαζί μας στο support@seismologos.gr και θα χαρούμε να σας εξυπηρετήσουμε.</p>
         <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
         <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">

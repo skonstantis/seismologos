@@ -24,7 +24,7 @@ router.get(
   validationController.verifyEmail
 );
 
-router.get(
+router.post(
   "/change-password",
   validationController.changePassword
 );
