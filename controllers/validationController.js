@@ -154,7 +154,7 @@ const changePassword = async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_PASSWORD_SECRET);
-    const {userId, purpose} = decoded.userId; 
+    const {userId, purpose} = decoded; 
 
     if (purpose !== 'changePassword') {
       return res.status(403).json({ errors: [{ msg: 'Invalid token purpose' }] });
