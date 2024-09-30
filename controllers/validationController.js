@@ -2,6 +2,7 @@ const { logger } = require("../config/logger");
 const { ObjectId } = require("mongodb");
 const jwt = require('jsonwebtoken');
 const { sendVerifiedEmail } = require("./emailController");
+const bcrypt = require("bcrypt");
 
 const validateUser = async (req, res) => {
   const db = req.app.locals.db;
@@ -178,10 +179,56 @@ const changePassword = async (req, res) => {
   }
 };
 
+const changePasswordValidated = async (req, res) => {
+  const db = req.app.locals.db;
+  const { token, password } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ errors: [{ msg: 'Token is missing' }] });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_PASSWORD_SECRET);
+    const {userId, purpose} = decoded; 
+
+    if (purpose !== 'changePassword') {
+      return res.status(403).json({ errors: [{ msg: 'Invalid token purpose' }] });
+    }
+
+    const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+
+    if (!user) {
+      return res.status(404).json({ errors: [{ msg: 'User not found' }] });
+    }
+
+    const hashedPassword = await bcrypt.hash(user.password, 10);
+
+    await db.collection('users').updateOne(
+      { _id: new ObjectId(user._id) },
+      {
+        $set: {
+          password: hashedPassword
+        }
+      }
+    );
+    //password changed email
+    res.status(200).json('Authorization granted');
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(400).json({ errors: [{ msg: 'Token has expired' }] });
+    } else if (err.name === 'JsonWebTokenError') {
+      return res.status(400).json({ errors: [{ msg: 'Invalid token' }] });
+    }
+    logger.error('DATABASE ERROR:', err);
+    res.status(500).json({ errors: [{ msg: 'DATABASE ERROR: Could not verify email' }] });
+  }
+};
+
 
 module.exports = {
   validateUser,
   verifyEmail, 
   validateSession,
-  changePassword
+  changePassword,
+  changePasswordValidated
 };
