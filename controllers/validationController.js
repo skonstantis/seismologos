@@ -190,7 +190,7 @@ const changePasswordValidated = async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_PASSWORD_SECRET);
-    const {userId, purpose} = decoded; 
+    const { userId, purpose } = decoded;
 
     if (purpose !== 'changePassword') {
       return res.status(403).json({ errors: [{ msg: 'Invalid token purpose' }] });
@@ -208,16 +208,17 @@ const changePasswordValidated = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await db.collection('users').updateOne(
-      { _id: new ObjectId(user._id) },
-      {
-        $set: {
-          password: hashedPassword,
-          lockedUntil: null
-        }
-      }
-    );
-    //password changed email
+    const updatedUser = {
+      ...user,
+      password: hashedPassword,
+      lockedUntil: null,
+      _id: new ObjectId() 
+    };
+
+    await db.collection('users').insertOne(updatedUser); 
+
+    await db.collection('users').deleteOne({ _id: new ObjectId(userId) });
+
     res.status(200).json('Success');
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
@@ -229,6 +230,7 @@ const changePasswordValidated = async (req, res) => {
     res.status(500).json({ errors: [{ msg: 'DATABASE ERROR: Could not verify email' }] });
   }
 };
+
 
 
 module.exports = {
