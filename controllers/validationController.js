@@ -201,7 +201,7 @@ const changePasswordValidated = async (req, res) => {
       return res.status(404).json({ errors: [{ msg: 'User not found' }] });
     }
 
-    const hashedPassword = await bcrypt.hash(user.password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     await db.collection('users').updateOne(
       { _id: new ObjectId(user._id) },
