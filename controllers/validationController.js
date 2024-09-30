@@ -203,6 +203,8 @@ const changePasswordValidated = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    console.log(hashedPassword);
+
     await db.collection('users').updateOne(
       { _id: new ObjectId(user._id) },
       {
@@ -212,7 +214,7 @@ const changePasswordValidated = async (req, res) => {
       }
     );
     //password changed email
-    res.status(200).json('Authorization granted');
+    res.status(200).json('qqqq');
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
       return res.status(400).json({ errors: [{ msg: 'Token has expired' }] });
