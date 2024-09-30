@@ -144,11 +144,48 @@ const validateSession = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  const db = req.app.locals.db;
+  const { token } = req.query;
 
+  if (!token) {
+    return res.status(400).json({ errors: [{ msg: 'Token is missing' }] });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_PASSWORD_SECRET);
+    const userId = decoded.userId; 
+
+    if (purpose !== 'changePassword') {
+      return res.status(403).json({ errors: [{ msg: 'Invalid token purpose' }] });
+    }
+
+    const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+
+    if (!user) {
+      return res.status(404).json({ errors: [{ msg: 'User not found' }] });
+    }
+    
+    if (!user.changePassword) {
+      return res.status(403).json({ errors: [{ msg: 'Password change not authorized' }] });
+    }
+
+    res.status(200).send('Authorization granted');
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(400).json({ errors: [{ msg: 'Token has expired' }] });
+    } else if (err.name === 'JsonWebTokenError') {
+      return res.status(400).json({ errors: [{ msg: 'Invalid token' }] });
+    }
+    logger.error('DATABASE ERROR:', err);
+    res.status(500).json({ errors: [{ msg: 'DATABASE ERROR: Could not verify email' }] });
+  }
+};
 
 
 module.exports = {
   validateUser,
   verifyEmail, 
-  validateSession
+  validateSession,
+  changePassword
 };

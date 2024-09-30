@@ -112,9 +112,10 @@ const loginUser = async (req, res) => {
       if (updatedUser.wrongPassword >= 10) {
         await db.collection('users').updateOne(
           { _id: new ObjectId(updatedUser._id) },
-          { $set: { lockedUntil: Date.now() + 1000 * 60 * 60 * 24, wrongPassword: 0, loginTokens: [] } }
+          { $set: { lockedUntil: Date.now() + 1000 * 60 * 60 * 24, wrongPassword: 0, loginTokens: [], hangePassword: true } }
         );
-        sendAccountLockedEmail(user.email, user.username, 1)
+        const token = jwt.sign({ userId: user._id, purpose: 'changePassword' }, process.env.JWT_PASSWORD_SECRET, { expiresIn: '1d' });
+        sendAccountLockedEmail(user.email, user.username, token);
         return res.status(400).json({ errors: [{ msg: "Ο λογαριασμός σας έχει κλειδωθεί για 24 ώρες" }] });
       }
 

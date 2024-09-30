@@ -24,4 +24,9 @@ router.get(
   validationController.verifyEmail
 );
 
+router.get(
+  "/change-password",
+  validationController.changePassword
+);
+
 module.exports = router;
