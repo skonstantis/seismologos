@@ -32,6 +32,7 @@ router.get(
 router.post(
   "/change-password-validated",
   validateUserPassword,
+  handleValidationErrors,
   validationController.changePasswordValidated
 );
 
