@@ -179,6 +179,43 @@ const sendAccountLockedEmail = async (email, username, token) => {
     `,
 };
 
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    logger.error("EMAIL ERROR:", error);
+  }
+};
+
+const sendPasswordChangedEmail = async (email, username) => {
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL,
+    to: email,
+    subject: "Άλλαξε ο κωδικός πρόσβασής σας στο seismologos.gr",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #dcdcdc; border-radius: 10px;">
+      <h2 style="color: #333;">Αγαπητέ/ή ${username},</h2>
+      <p>Σας ενημερώνουμε ότι ο κωδικός πρόσβασής σας έχει αλλάξει επιτυχώς.</p>
+      <p>Εάν δεν κάνατε εσείς την αλλαγή αυτή, παρακαλούμε επικοινωνήστε μαζί μας άμεσα στο <a href="mailto:support@seismologos.gr">support@seismologos.gr</a>.</p>
+      <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
+      <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">
+      <p style="font-size: 12px; color: #888; text-align: center;">
+        Αυτό το μήνυμα στάλθηκε αυτόματα από το seismologos.gr.<br>
+        Παρακαλούμε μην απαντήσετε σε αυτό το email.<br>
+        Για οποιαδήποτε πληροφορία, επικοινωνήστε μαζί μας στο <a href="mailto:support@seismologos.gr">support@seismologos.gr</a>.
+      </p>
+      </div>
+    `,
+};
 
   try {
     await transporter.sendMail(mailOptions);
@@ -193,4 +230,5 @@ module.exports = {
   sendReminderEmail,
   sendDeletionEmail,
   sendAccountLockedEmail,
+  sendPasswordChangedEmail,
 };
