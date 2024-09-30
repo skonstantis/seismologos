@@ -1,7 +1,7 @@
 const { logger } = require("../config/logger");
 const { ObjectId } = require("mongodb");
 const jwt = require('jsonwebtoken');
-const { sendVerifiedEmail } = require("./emailController");
+const { sendVerifiedEmail, sendPasswordChangedEmail } = require("./emailController");
 const bcrypt = require("bcrypt");
 
 const validateUser = async (req, res) => {
