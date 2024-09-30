@@ -203,13 +203,12 @@ const changePasswordValidated = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    console.log(hashedPassword);
-
     await db.collection('users').updateOne(
       { _id: new ObjectId(user._id) },
       {
         $set: {
-          password: hashedPassword
+          password: hashedPassword,
+          lockedUntil: null
         }
       }
     );
