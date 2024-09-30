@@ -29,7 +29,7 @@ router.get(
   validationController.changePassword
 );
 
-router.get(
+router.post(
   "/change-password-validated",
   validateUserPassword,
   validationController.changePasswordValidated
