@@ -202,8 +202,9 @@ const changePasswordValidated = async (req, res) => {
       return res.status(404).json({ errors: [{ msg: 'User not found' }] });
     }
 
-    if(errors != [])
-      return res.status(400).json({ errors: errors });
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
