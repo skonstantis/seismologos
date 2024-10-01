@@ -1,7 +1,7 @@
 const { logger } = require("../config/logger");
 const { ObjectId } = require("mongodb");
 const jwt = require('jsonwebtoken');
-const { sendVerifiedEmail, sendPasswordChangedEmail } = require("./emailController");
+const { sendVerifiedEmail, sendPasswordChangedEmail, sendForgotPasswordEmail } = require("./emailController");
 const bcrypt = require("bcrypt");
 
 const validateUser = async (req, res) => {
@@ -79,8 +79,12 @@ const verifyEmail = async (req, res) => {
       }
     );
 
-    sendVerifiedEmail(user.email, user.username);
-
+    try {
+      await sendVerifiedEmail(user.email, user.username);
+    } catch (emailError) {
+      logger.error('EMAIL ERROR:', emailError);
+      return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
+    }
     res.status(200).send('Email verified successfully!');
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
@@ -220,7 +224,12 @@ const changePasswordValidated = async (req, res) => {
 
     await db.collection('users').deleteOne({ _id: new ObjectId(userId) });
     
-    sendPasswordChangedEmail(updatedUser.email, updatedUser.username);
+    try {
+      await sendPasswordChangedEmail(user.email, user.username); 
+    } catch (emailError) {
+      logger.error('EMAIL ERROR:', emailError);
+      return res.status(500).json({ msg: 'EMAIL ERROR: Could not send email' });
+    }
 
     res.status(200).json('Success');
   } catch (err) {
@@ -234,6 +243,37 @@ const changePasswordValidated = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  const db = req.app.locals.db;
+  const { email } = req.body; 
+  let errors = req.validationErrors || [];
+
+  try {
+    if (!email) {
+      return res.status(400).json({ errors: [{ msg: "ERROR: E-mail must be provided" }] });
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
+
+    const user = await db.collection('users').findOne({ email: email });
+    if (user) {
+      const token = jwt.sign({ userId: user._id, purpose: 'changePassword' }, process.env.JWT_PASSWORD_SECRET, { expiresIn: '1d' });
+      try {
+        await sendForgotPasswordEmail(user.email, user.username, token); 
+      } catch (emailError) {
+        logger.error('EMAIL ERROR:', emailError);
+        return res.status(500).json({ msg: 'EMAIL ERROR: Could not send email' });
+      }
+    }
+
+    res.status(200).json([]);
+  } catch (err) {
+    logger.error('DATABASE ERROR:', err);
+    res.status(500).json({ msg: 'DATABASE ERROR: Could not validate document' });
+  }
+};
 
 
 module.exports = {
@@ -241,5 +281,6 @@ module.exports = {
   verifyEmail, 
   validateSession,
   changePassword,
-  changePasswordValidated
+  changePasswordValidated,
+  forgotPassword
 };

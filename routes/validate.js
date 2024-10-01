@@ -1,6 +1,6 @@
 const express = require("express");
 const {
-  validateUser, validateUserPassword
+  validateUser, validateUserPassword, validateUserEmail
 } = require("../middlewares/userValidation");
 const { handleValidationErrors } = require("../middlewares/errorHandler");
 const validationController = require("../controllers/validationController");
@@ -34,6 +34,13 @@ router.post(
   validateUserPassword,
   handleValidationErrors,
   validationController.changePasswordValidated
+);
+
+router.post(
+  "/forgot-password",
+  validateUserEmail,
+  handleValidationErrors,
+  validationController.forgotPassword
 );
 
 module.exports = router;

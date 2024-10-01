@@ -75,8 +75,13 @@ const validateUserPassword = [
   passwordValidation(),
 ];
 
+const validateUserEmail = [
+  emailValidation(),
+];
+
+
 const validateUserIdParam = [
   param('id').custom(value => ObjectId.isValid(value)).withMessage('ERROR: Invalid parameter: id')
 ];
 
-module.exports = { validateUser, validateUserUpdate, validateUserPassword, validateUserIdParam };
+module.exports = { validateUser, validateUserUpdate, validateUserPassword, validateUserEmail, validateUserIdParam };

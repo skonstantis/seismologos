@@ -224,6 +224,43 @@ const sendPasswordChangedEmail = async (email, username) => {
   }
 };
 
+const sendForgotPasswordEmail = async (email, username, token) => {
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL,
+    to: email,
+    subject: "Αλλαγή κωδικού πρόσβασής seismologos.gr",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #dcdcdc; border-radius: 10px;">
+        <h2 style="color: #333;">Αγαπητέ/ή ${username},</h2>
+        <p>Έγινε αίτημα για αλλαγή του κωδικού πρόσβασης σας.</p>
+        <p>Μπορείτε να αλλάξετε τον κωδικό πρόσβασης σας πατώντας το κουμπί 'Αλλαγή Κωδικού Πρόσβασης'.</p>
+        <p>Ο σύνδεσμος ισχύει για 24 ώρες.</p>
+        <a href="http://${process.env.CLIENT}/change-password?token=${token}" style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #4CAF50; text-align: center; text-decoration: none; border-radius: 5px;">Αλλαγή Κωδικού Πρόσβασης</a>
+        <p>Για οποιαδήποτε πληροφορία ή βοήθεια, παρακαλούμε επικοινωνήστε μαζί μας στο support@seismologos.gr και θα χαρούμε να σας εξυπηρετήσουμε.</p>
+        <p>Με εκτίμηση,<br>Η ομάδα του seismologos.gr</p>
+        <hr style="border: none; border-top: 1px solid #dcdcdc; margin: 20px 0;">
+        <p style="font-size: 12px; color: #888; text-align: center;">Αυτό το μήνυμα στάλθηκε αυτόματα από το seismologos.gr.<br>Παρακαλούμε μην απαντήσετε σε αυτό το email.<br>Για οποιαδήποτε πληροφορία, επικοινωνήστε μαζί μας στο support@seismologos.gr</p>
+      </div>
+    `,
+};
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    logger.error("EMAIL ERROR:", error);
+  }
+};
+
 module.exports = {
   sendVerificationEmail,
   sendVerifiedEmail,
@@ -231,4 +268,5 @@ module.exports = {
   sendDeletionEmail,
   sendAccountLockedEmail,
   sendPasswordChangedEmail,
+  sendForgotPasswordEmail,
 };

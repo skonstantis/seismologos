@@ -114,8 +114,15 @@ const loginUser = async (req, res) => {
           { _id: new ObjectId(updatedUser._id) },
           { $set: { lockedUntil: Date.now() + 1000 * 60 * 60 * 24, wrongPassword: 0, loginTokens: [] } }
         );
+        
         const token = jwt.sign({ userId: user._id, purpose: 'changePassword' }, process.env.JWT_PASSWORD_SECRET, { expiresIn: '1d' });
-        sendAccountLockedEmail(user.email, user.username, token);
+        try {
+          await sendAccountLockedEmail(user.email, user.username, token);
+        } catch (emailError) {
+          logger.error('EMAIL ERROR:', emailError);
+          return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
+        }
+
         return res.status(400).json({ errors: [{ msg: "Ο λογαριασμός σας έχει κλειδωθεί για 24 ώρες" }] });
       }
 
@@ -222,11 +229,12 @@ const createUser = async (req, res) => {
 
     const token = jwt.sign({ userId: result.insertedId }, process.env.JWT_VERIFICATION_SECRET, { expiresIn: '7d' });
 
-    await sendVerificationEmail(
-      user.email,
-      user.username,
-      token
-    );
+    try {
+      await sendVerificationEmail(user.email, user.username, token); 
+    } catch (emailError) {
+      logger.error('EMAIL ERROR:', emailError);
+      return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
+    }
 
     res.status(201).json(result);
   } catch (err) {

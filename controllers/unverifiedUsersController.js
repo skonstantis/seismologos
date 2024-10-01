@@ -16,7 +16,14 @@ const handleUnverifiedUsers = async (db) => {
 
   for (const user of threeDaysLeft) {
     const token = jwt.sign({ userId: user.insertedId }, process.env.JWT_VERIFICATION_SECRET, { expiresIn: '3d' });
-    await sendReminderEmail(user.email, user.username, 3, token);
+
+    try {
+      await sendReminderEmail(user.email, user.username, 3, token); 
+    } catch (emailError) {
+      logger.error('EMAIL ERROR:', emailError);
+      return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
+    }
+
     await db.collection("users").updateOne(
       { _id: user._id },
       { $set: { threeDaysVerificationNotification: true } }
@@ -34,7 +41,14 @@ const handleUnverifiedUsers = async (db) => {
 
   for (const user of oneDayLeft) {
     const token = jwt.sign({ userId: user._id }, process.env.JWT_VERIFICATION_SECRET, { expiresIn: '1d' });
-    await sendReminderEmail(user.email, user.username, 1, token);
+
+    try {
+      await sendReminderEmail(user.email, user.username, 1, token); 
+    } catch (emailError) {
+      logger.error('EMAIL ERROR:', emailError);
+      return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
+    }
+
     await db.collection("users").updateOne(
       { _id: user._id },
       { $set: { oneDayVerificationNotification: true } }
@@ -47,7 +61,12 @@ const handleUnverifiedUsers = async (db) => {
   }).toArray();
 
   for (const user of unverifiedUsers) {
-    await sendDeletionEmail(user.email, user.username);
+    try {
+      await sendDeletionEmail(user.email, user.username); 
+    } catch (emailError) {
+      logger.error('EMAIL ERROR:', emailError);
+      return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
+    }
   }
 
   const result = await db.collection("users").deleteMany({
