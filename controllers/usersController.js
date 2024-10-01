@@ -173,7 +173,7 @@ const loginUser = async (req, res) => {
 
 const logoutUser = async (req, res) => {
   const db = req.app.locals.db;
-  const { id, token } = req.body || {};
+  const { id, username, token } = req.body || {};
 
   try {
     if (!token) {
@@ -184,10 +184,21 @@ const logoutUser = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: "Id is missing" }] });
     }
 
-    const user = await db.collection("users").findOne({ _id: id });
+    const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
 
     if (!user) {
-      return res.status(404).json({ errors: [{ msg: "User not found" }] });
+      if (!username) {
+        return res.status(400).json({ errors: [{ msg: "Username is missing" }] });
+      }
+      user = await db.collection("users").findOne({ username: username });
+      if (!user) {
+        return res.status(404).json({ errors: [{ msg: "User not found" }] });
+      }
+      else{
+        if (!user.oldIds || !user.oldIds.includes(new ObjectId(id))) {
+          return res.status(404).json({ errors: [{ msg: "User not found" }] });
+        }
+      }
     }
 
     if (!user.loginTokens || !user.loginTokens.includes(token)) {
@@ -195,7 +206,7 @@ const logoutUser = async (req, res) => {
     }
 
     await db.collection("users").updateOne(
-      { _id: id },
+      { _id: new ObjectId(id) },
       { $pull: { loginTokens: token } }
     );
 
