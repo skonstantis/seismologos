@@ -30,6 +30,11 @@ router.post(
   usersController.loginUser
 );
 
+router.post(
+  "/logout",
+  usersController.logoutUser
+);
+
 router.patch(
   "/:id",
   validateUserIdParam,

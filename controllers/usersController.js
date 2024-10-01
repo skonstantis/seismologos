@@ -171,6 +171,42 @@ const loginUser = async (req, res) => {
   }
 };
 
+const logoutUser = async (req, res) => {
+  const db = req.app.locals.db;
+  const { id, token } = req.body || {};
+
+  try {
+    if (!token) {
+      return res.status(400).json({ errors: [{ msg: "Token is missing" }] });
+    }
+
+    if (!id) {
+      return res.status(400).json({ errors: [{ msg: "Id is missing" }] });
+    }
+
+    const user = await db.collection("users").findOne({ _id: id });
+
+    if (!user) {
+      return res.status(404).json({ errors: [{ msg: "User not found" }] });
+    }
+
+    if (!user.loginTokens || !user.loginTokens.includes(token)) {
+      return res.status(400).json({ errors: [{ msg: "Token not found" }] });
+    }
+
+    await db.collection("users").updateOne(
+      { _id: id },
+      { $pull: { loginTokens: token } }
+    );
+
+    res.status(200).json({ msg: "Successfully logged out" });
+
+  } catch (err) {
+    console.error("DATABASE ERROR:", err);
+    res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not update document" }] });
+  }
+};
+
 
 const createUser = async (req, res) => {
   const db = req.app.locals.db;
@@ -344,6 +380,7 @@ module.exports = {
   getUserById,
   createUser,
   loginUser,
+  logoutUser,
   updateUser,
   deleteUser,
 };
