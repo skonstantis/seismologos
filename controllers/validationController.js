@@ -250,7 +250,7 @@ const forgotPassword = async (req, res) => {
 
   try {
     if (!email) {
-      return res.status(400).json({ errors: [{ msg: "ERROR: E-mail must be provided" }] });
+      return res.status(400).json({ errors: [{ msg: "Η φόρμα είναι άδεια" }] });
     }
 
     if (errors.length > 0) {
