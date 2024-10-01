@@ -85,7 +85,7 @@ const verifyEmail = async (req, res) => {
       logger.error('EMAIL ERROR:', emailError);
       return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
     }
-    res.status(200).send('Email verified successfully!');
+    return res.redirect('https://seismologos.netlify.app/login?verified=true');
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
       return res.status(400).json({ errors: [{ msg: 'Token has expired' }] });
