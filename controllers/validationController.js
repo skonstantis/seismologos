@@ -217,6 +217,7 @@ const changePasswordValidated = async (req, res) => {
       password: hashedPassword,
       oldIds: user.oldIds ? [...user.oldIds, user._id] : [user._id], 
       lockedUntil: null,
+      loginTokens: [],
       _id: new ObjectId() 
     };
 
