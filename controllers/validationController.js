@@ -259,6 +259,8 @@ const forgotPassword = async (req, res) => {
 
     const user = await db.collection('users').findOne({ email: email });
     if (user) {
+      if(!user.verified)
+        return res.status(400).json({ errors: [{ msg: "Αυτός ο λογαριασμός δεν είναι ενεργοποιημένος. Επιβεβαιώστε την διεύθυνση e-mail σας και προσπαθήστε ξανά." }] });
       const token = jwt.sign({ userId: user._id, purpose: 'changePassword' }, process.env.JWT_PASSWORD_SECRET, { expiresIn: '1d' });
       try {
         await sendForgotPasswordEmail(user.email, user.username, token); 
