@@ -137,14 +137,12 @@ const validateSession = async (req, res) => {
       { _id: new ObjectId(user._id) },
       {
         $set: {
-          loginTokens: [...validTokens, newToken],
-          active: 0
+          loginTokens: [...validTokens, newToken]
         }
       }
     );
 
-    const websocketUrl = `ws://${req.headers.host}/ws/${user.username}`;
-    res.json({ token: newToken, msg: "Session extended", user: { id: user._id, username: user.username, email: user.email, lastLogin: user.lastLogin, websocketUrl: websocketUrl } });
+    res.json({ token: newToken, msg: "Session extended", user: { id: user._id, username: user.username, email: user.email, lastLogin: user.lastLogin } });
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
     res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });
