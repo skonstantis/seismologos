@@ -3,16 +3,51 @@ const wss = new WebSocket.Server({ noServer: true });
 
 // Map to store active users
 const activeUsers = new Map();
+const MESSAGE_TIMEOUT = 2 * 60 * 1000; // 2 minutes in milliseconds
 
 // Handle WebSocket connections
 wss.on('connection', (ws, req) => {
   const username = req.url.split('/').pop();
   activeUsers.set(username, { ws, lastActive: new Date() });
 
+  let messageTimeout;
+
+  // Function to reset the timeout
+  const resetMessageTimeout = () => {
+    if (messageTimeout) {
+      clearTimeout(messageTimeout);
+    }
+    messageTimeout = setTimeout(() => {
+      console.log(`Closing connection for ${username} due to inactivity.`);
+      ws.close();
+    }, MESSAGE_TIMEOUT);
+  };
+
+  // Reset timeout on connection establishment
+  resetMessageTimeout();
+
+  // Handle incoming messages to update last active time
+  ws.on('message', async (message) => {
+    if (activeUsers.has(username)) {
+      activeUsers.get(username).lastActive = new Date();
+      
+      // Update the user's active status in the database
+      await db.collection('users').updateOne(
+        { username: username },
+        { $set: { active: 0 } }
+      );
+
+      // Reset the message timeout since a message was received
+      resetMessageTimeout();
+    }
+  });
+
   // Handle WebSocket closure
   ws.on('close', async () => {
+    clearTimeout(messageTimeout); // Clear the timeout when closing
     const lastActiveTime = new Date().getTime();
     activeUsers.delete(username);
+    
     // Update the user's active status in the database
     await db.collection('users').updateOne(
       { username: username },
@@ -20,16 +55,10 @@ wss.on('connection', (ws, req) => {
     );
   });
 
-  // Handle incoming messages to update last active time
-  ws.on('message', async (message) => {
-    if (activeUsers.has(username)) {
-      activeUsers.get(username).lastActive = new Date();
-      // Update the user's active status in the database
-      await db.collection('users').updateOne(
-        { username: username },
-        { $set: { active: 0 } }
-      );
-    }
+  // Cleanup on error
+  ws.on('error', async (error) => {
+    console.error(`WebSocket error for ${username}:`, error);
+    activeUsers.delete(username);
   });
 });
 
@@ -45,21 +74,3 @@ server.on('upgrade', (request, socket, head) => {
     socket.destroy();
   }
 });
-
-// Function to get user status
-const getUserStatus = async (username) => {
-  const user = await db.collection('users').findOne({ username: username });
-  if (!user) {
-    return 'User not found';
-  }
-
-  if (user.active === 0) {
-    return 'active now';
-  }
-
-  const now = new Date();
-  const lastActive = new Date(user.active);
-  const diffMinutes = Math.floor((now - lastActive) / 60000);
-
-  return `active ${diffMinutes} minutes ago`;
-};
