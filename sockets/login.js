@@ -7,6 +7,7 @@ const MESSAGE_TIMEOUT = 2 * 60 * 1000; // 2 minutes in milliseconds
 
 // Handle WebSocket connections
 wss.on('connection', (ws, req) => {
+  console.log(`${username}`);
   const username = req.url.split('/').pop();
   activeUsers.set(username, { ws, lastActive: new Date() });
 
