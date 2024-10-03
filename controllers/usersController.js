@@ -158,13 +158,16 @@ const loginUser = async (req, res) => {
         $set: {
           lastLogin: Date.now(),
           wrongPassword: 0,
-          loginTokens: [...user.loginTokens, token] 
+          loginTokens: [...user.loginTokens, token],
+          active: 0  
         },
         $inc: { timesLoggedIn: 1 }
       }
     );
 
-    res.json({ token: token, msg: "Session created", user: { id: user._id, username: user.username, email: user.email, lastLogin: lastLogin } });
+    const websocketUrl = `ws://${req.headers.host}/ws/${user.username}`;
+
+    res.json({ token: token, msg: "Session created", user: { id: user._id, username: user.username, email: user.email, lastLogin: lastLogin, websocketUrl: websocketUrl } });
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
     res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });
