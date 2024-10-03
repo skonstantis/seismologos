@@ -74,3 +74,21 @@ server.on('upgrade', (request, socket, head) => {
     socket.destroy();
   }
 });
+
+const getUserStatus = async (username) => {
+    const user = await db.collection('users').findOne({ username: username });
+    if (!user) {
+      return 'User not found';
+    }
+  
+    if (user.active === 0) {
+      return 'active now';
+    }
+  
+    const now = new Date();
+    const lastActive = new Date(user.active);
+    const diffMinutes = Math.floor((now - lastActive) / 60000);
+  
+    return `active ${diffMinutes} minutes ago`;
+  };
+  
