@@ -6,9 +6,10 @@ const { logger } = require("./config/logger");
 const { limiter } = require("./config/rateLimiter");
 const routes = require("./routes");
 const shutdown = require("./controllers/shutdown");
-const cron = require("node-cron"); 
+const cron = require("node-cron");
 const { handleUnverifiedUsers } = require("./controllers/unverifiedUsersController");
 const WebSocket = require("ws");
+const { v4: uuidv4 } = require("uuid");
 
 const port = process.env.PORT || 3000;
 const server = express();
@@ -20,7 +21,8 @@ server.use(express.json());
 server.use(limiter);
 
 const activeUsers = new Map();
-const MESSAGE_TIMEOUT = 2 * 60 * 1000; 
+const activeVisitors = new Set(); 
+const MESSAGE_TIMEOUT = 2 * 60 * 1000;
 
 dbConnect((err, database) => {
   if (!err) {
@@ -30,12 +32,23 @@ dbConnect((err, database) => {
       logger.info(`Server listening on port ${port}`);
     });
 
-    const userSocket = new WebSocket.Server({ server: httpServer }); 
+    const userSocket = new WebSocket.Server({ server: httpServer });
 
     userSocket.on('connection', (ws, req) => {
-      const username = req.url.split('/').pop(); 
-      logger.info(`${username} connected to the WebSocket`); 
-      activeUsers.set(username, { ws, lastActive: new Date() });
+      const params = new URLSearchParams(req.url.replace('/', ''));
+      const username = params.get('username');
+      const visitorId = params.get('visitorId') || uuidv4();
+      const isVisitor = !username;
+
+      if (isVisitor) {
+        logger.info(`Visitor with ID ${visitorId} connected to the WebSocket`);
+        ws.send(JSON.stringify({ type: 'visitorId', visitorId }));
+        activeVisitors.add(ws);
+        broadcastVisitorCount(); 
+      } else {
+        logger.info(`${username} connected to the WebSocket`);
+        activeUsers.set(username, { ws, lastActive: new Date() });
+      }
 
       let messageTimeout;
 
@@ -44,7 +57,7 @@ dbConnect((err, database) => {
           clearTimeout(messageTimeout);
         }
         messageTimeout = setTimeout(() => {
-          logger.info(`Closing connection for ${username} due to inactivity.`); 
+          logger.info(`Closing connection for ${isVisitor ? 'visitor' : username} due to inactivity.`);
           ws.close();
         }, MESSAGE_TIMEOUT);
       };
@@ -52,40 +65,57 @@ dbConnect((err, database) => {
       resetMessageTimeout();
 
       ws.on('message', async (message) => {
-        if (activeUsers.has(username)) {
+        if (isVisitor) {
+          resetMessageTimeout();
+        } else if (activeUsers.has(username)) {
           activeUsers.get(username).lastActive = new Date();
-          
           await server.locals.db.collection('users').updateOne(
             { username: username },
             { $set: { active: 0 } }
           );
-
           resetMessageTimeout();
         }
       });
 
       ws.on('close', async () => {
         clearTimeout(messageTimeout);
-        const lastActiveTime = new Date().getTime();
-        activeUsers.delete(username);
-        
-        logger.info(`${username} disconnected from the WebSocket`); 
-
-        await server.locals.db.collection('users').updateOne(
-          { username: username },
-          { $set: { active: lastActiveTime } }
-        );
+        if (isVisitor) {
+          activeVisitors.delete(ws);
+          logger.info(`Visitor with ID ${visitorId} disconnected from the WebSocket`);
+          broadcastVisitorCount(); 
+        } else {
+          const lastActiveTime = new Date().getTime();
+          activeUsers.delete(username);
+          logger.info(`${username} disconnected from the WebSocket`);
+          await server.locals.db.collection('users').updateOne(
+            { username: username },
+            { $set: { active: lastActiveTime } }
+          );
+        }
       });
 
       ws.on('error', (error) => {
-        logger.error(`WebSocket error for ${username}:`, error);
-        activeUsers.delete(username);
+        logger.error(`WebSocket error for ${isVisitor ? 'visitor' : username}:`, error);
+        if (isVisitor) {
+          activeVisitors.delete(ws);
+        } else {
+          activeUsers.delete(username);
+        }
       });
     });
 
+    const broadcastVisitorCount = () => {
+      const currentVisitorCount = activeVisitors.size; 
+      activeVisitors.forEach((ws) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'visitorCount', count: currentVisitorCount }));
+        }
+      });
+    };
+
     cron.schedule('* * * * *', async () => {
       try {
-        await handleUnverifiedUsers(server.locals.db); 
+        await handleUnverifiedUsers(server.locals.db);
       } catch (error) {
         logger.error("Error deleting expired users:", error);
       }
