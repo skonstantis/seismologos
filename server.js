@@ -6,7 +6,7 @@ const { logger } = require("./config/logger");
 const { limiter } = require("./config/rateLimiter");
 const routes = require("./routes");
 const shutdown = require("./controllers/shutdown");
-const cron = require("node-cron"); 
+const cron = require("node-cron");
 const { handleUnverifiedUsers } = require("./controllers/unverifiedUsersController");
 const WebSocket = require("ws");
 const { v4: uuidv4 } = require("uuid");
@@ -31,15 +31,19 @@ dbConnect((err, database) => {
       logger.info(`Server listening on port ${port}`);
     });
 
-    const userSocket = new WebSocket.Server({ server: httpServer }); 
+    const userSocket = new WebSocket.Server({ server: httpServer });
 
     userSocket.on('connection', (ws, req) => {
+      const queryParams = new URLSearchParams(req.url.split('?')[1]);
+      const username = queryParams.get('username'); 
       const visitorId = uuidv4(); 
-      logger.info(`Visitor connected: ${visitorId}`);
+      const userId = username ? username : visitorId; 
 
-      ws.send(JSON.stringify({ type: 'visitorId', visitorId }));
+      logger.info(`Connection established for ${username ? 'user' : 'visitor'}: ${userId}`);
 
-      activeUsers.set(visitorId, { ws, lastActive: new Date() });
+      ws.send(JSON.stringify({ type: 'visitorId', visitorId: userId }));
+
+      activeUsers.set(userId, { ws, lastActive: new Date() });
 
       let messageTimeout;
 
@@ -48,7 +52,7 @@ dbConnect((err, database) => {
           clearTimeout(messageTimeout);
         }
         messageTimeout = setTimeout(() => {
-          logger.info(`Closing connection for ${visitorId} due to inactivity.`); 
+          logger.info(`Closing connection for ${userId} due to inactivity.`);
           ws.close();
         }, MESSAGE_TIMEOUT);
       };
@@ -56,27 +60,27 @@ dbConnect((err, database) => {
       resetMessageTimeout();
 
       ws.on('message', async (message) => {
-        if (activeUsers.has(visitorId)) {
-          activeUsers.get(visitorId).lastActive = new Date();
+        if (activeUsers.has(userId)) {
+          activeUsers.get(userId).lastActive = new Date();
           resetMessageTimeout();
         }
       });
 
       ws.on('close', async () => {
         clearTimeout(messageTimeout);
-        activeUsers.delete(visitorId);
-        logger.info(`Visitor disconnected: ${visitorId}`); 
+        activeUsers.delete(userId);
+        logger.info(`Connection closed for ${userId}`);
       });
 
       ws.on('error', (error) => {
-        logger.error(`WebSocket error for visitor: ${visitorId}:`, error);
-        activeUsers.delete(visitorId);
+        logger.error(`WebSocket error for ${userId}:`, error);
+        activeUsers.delete(userId);
       });
     });
 
     cron.schedule('* * * * *', async () => {
       try {
-        await handleUnverifiedUsers(server.locals.db); 
+        await handleUnverifiedUsers(server.locals.db);
       } catch (error) {
         logger.error("Error deleting expired users:", error);
       }
