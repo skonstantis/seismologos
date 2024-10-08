@@ -5,6 +5,7 @@ const activeUsers = new Map();
 module.exports = (ws, req, db, logger) => {
   const token = req.url.split("?token=")[1]; 
   const username = req.url.split("/").pop(); 
+  console.log(token);
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_LOGIN_SECRET);
