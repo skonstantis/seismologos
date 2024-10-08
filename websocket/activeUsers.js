@@ -3,15 +3,24 @@ const jwt = require("jsonwebtoken");
 const activeUsers = new Map();
 
 module.exports = (ws, req, db, logger) => {
-  const token = req.url.split("?token=")[1]; 
-  const username = req.url.split("/").pop(); 
+    const [path, query] = req.url.split("?");
+
+    const pathSegments = path.split("/");
+    const username = pathSegments.pop(); 
+  
+    const tokenParams = new URLSearchParams(query);
+    const token = tokenParams.get("token");
+  
+    if (!token) {
+      ws.close(4000, "Unauthorized: Token is required"); 
+      return;
+    }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_LOGIN_SECRET);
 
     if (decoded.username !== username) {
       ws.close(4001, "Unauthorized: Invalid username");
-      logger.info(`${username} invalid`);
       return;
     }
 
