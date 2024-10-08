@@ -1,8 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const activeUsers = new Map();
-
-module.exports = async (ws, req, db, logger) => {
+module.exports = async (activeUsers, ws, req, db, logger) => {
     const [path, query] = req.url.split("?");
     const pathSegments = path.split("/");
     const username = pathSegments.pop();
@@ -66,6 +64,13 @@ const broadcastMessage = (message, logger) => {
             ws.send(messageString);
         } else {
             logger.error(`Invalid WebSocket for user ${username}`);
+        }
+    }
+    for (const [visitorId, ws] of activeVisitors) {
+        if (ws && typeof ws.send === 'function') {
+            ws.send(messageString);
+        } else {
+            logger.error(`Invalid WebSocket for visitor ${visitorId}`);
         }
     }
 };

@@ -2,17 +2,20 @@ const activeUsersHandler = require('./activeUsers');
 const activeVisitorsHandler = require('./activeVisitors');
 const { v4: uuidv4 } = require('uuid'); 
 
+const activeUsers = new Map();
+const activeVisitors = new Map();
+
 module.exports = (ws, req, db, logger) => {
   const pathSegments = req.url.split('/');
   const basePath = pathSegments[pathSegments.length - 2]; 
 
   switch (basePath) {
     case 'activeUsers':
-      activeUsersHandler(ws, req, db, logger);
+      activeUsersHandler(activeUsers, ws, req, db, logger);
       break;
     case 'activeVisitors':
       const visitorId = uuidv4();
-      activeVisitorsHandler(ws, req, db, logger, visitorId);
+      activeVisitorsHandler(activeVisitors, ws, req, db, logger, visitorId);
       break;
     default:
       logger.warn(`Unknown WebSocket path: ${req.url}`);
