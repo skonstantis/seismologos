@@ -2,7 +2,7 @@ const activeUsersHandler = require('./activeUsers');
 
 module.exports = (ws, req, db, logger) => {
   const pathSegments = req.url.split('/');
-  const basePath = pathSegments[pathSegments.length - 2];
+  const basePath = pathSegments[pathSegments.length - 2]; 
 
   switch (basePath) {
     case 'activeUsers':
