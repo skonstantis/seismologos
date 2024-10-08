@@ -26,19 +26,12 @@ module.exports = async (ws, req, db, logger) => {
 
         logger.info(`${username} connected to the WebSocket`);
 
-        activeUsers.set(username, { ws, lastActive: new Date() });
+        activeUsers.set(username, { ws });
 
         await db.collection("stats").updateOne({}, { $set: { loggedInUsers: activeUsers.size } });
 
         ws.on("message", async (message) => {
-            if (activeUsers.has(username)) {
-                activeUsers.get(username).lastActive = new Date();
-
-                await db.collection("users").updateOne(
-                    { username: username },
-                    { $set: { active: 0 } } 
-                );
-            }
+            
         });
 
         ws.on("close", async () => {
