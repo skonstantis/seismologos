@@ -20,27 +20,35 @@ server.use(helmet());
 server.use(express.json());
 server.use(limiter);
 
-dbConnect((err, database) => {
+dbConnect(async (err, database) => {
   if (!err) {
     server.locals.db = database;
 
-    const httpServer = server.listen(port, () => {
-      logger.info(`Server listening on port ${port}`);
-    });
+    try {
+      const statsCollection = database.collection("stats");
+      await statsCollection.updateOne({}, { $set: { loggedInUsers: 0 } }, { upsert: true });
 
-    const wsServer = new WebSocket.Server({ server: httpServer });
+      const httpServer = server.listen(port, () => {
+        logger.info(`Server listening on port ${port}`);
+      });
 
-    wsServer.on("connection", (ws, req) => {
-      websocketRouter(ws, req, server.locals.db, logger);
-    });
+      const wsServer = new WebSocket.Server({ server: httpServer });
 
-    cron.schedule("* * * * *", async () => {
-      try {
-        await handleUnverifiedUsers(server.locals.db);
-      } catch (error) {
-        logger.error("Error deleting expired users:", error);
-      }
-    });
+      wsServer.on("connection", (ws, req) => {
+        websocketRouter(ws, req, server.locals.db, logger);
+      });
+
+      cron.schedule("* * * * *", async () => {
+        try {
+          await handleUnverifiedUsers(server.locals.db);
+        } catch (error) {
+          logger.error("Error deleting expired users:", error);
+        }
+      });
+    } catch (error) {
+      logger.error("Failed to initialize loggedInUsers", error);
+      process.exit(1);
+    }
   } else {
     logger.error("Failed to connect to the database", err);
     process.exit(1);
