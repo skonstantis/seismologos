@@ -28,7 +28,7 @@ module.exports = async (ws, req, db, logger) => {
 
         activeUsers.set(username, { ws });
 
-        await db.collection("stats").updateOne({}, { $set: { loggedInUsers: activeUsers.size } });
+        await db.collection("stats").updateOne({}, { $set: { activeUsers: activeUsers.size } });
 
         ws.on("message", async (message) => {
             
@@ -40,7 +40,7 @@ module.exports = async (ws, req, db, logger) => {
 
             logger.info(`${username} disconnected from the WebSocket`);
 
-            await db.collection("stats").updateOne({}, { $set: { loggedInUsers: activeUsers.size } });
+            await db.collection("stats").updateOne({}, { $set: { activeUsers: activeUsers.size } });
 
             await db.collection("users").updateOne(
                 { username: username },

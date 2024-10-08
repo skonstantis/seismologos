@@ -12,7 +12,7 @@ module.exports = (ws, req, db, logger) => {
       break;
     case 'activeVisitors':
       const visitorId = uuidv4();
-      activeVisitorsHandler(ws, req, logger, visitorId);
+      activeVisitorsHandler(ws, req, db, logger, visitorId);
       break;
     default:
       logger.warn(`Unknown WebSocket path: ${req.url}`);

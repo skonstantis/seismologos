@@ -26,7 +26,7 @@ dbConnect(async (err, database) => {
 
     try {
       const statsCollection = database.collection("stats");
-      await statsCollection.updateOne({}, { $set: { loggedInUsers: 0 } }, { upsert: true });
+      await statsCollection.updateOne({}, { $set: { activeUsers: 0, activeVisitors: 0 } }, { upsert: true });
 
       const httpServer = server.listen(port, () => {
         logger.info(`Server listening on port ${port}`);
