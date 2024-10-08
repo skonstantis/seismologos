@@ -9,20 +9,20 @@ module.exports = async (ws, req, db, logger, visitorId) => {
         await db.collection("stats").updateOne({}, { $set: { activeVisitors: activeVisitors.size } });
 
         const currentStats = await db.collection("stats").findOne({});
-
+        
         broadcastMessage(currentStats);
 
         ws.on("message", (message) => {
+            logger.info(`Message from visitor ${visitorId}: ${message}`);
         });
 
         ws.on("close", async () => {
-            activeVisitors.delete(visitorId);
+            activeVisitors.delete(visitorId); 
             logger.info(`Visitor ${visitorId} disconnected from the WebSocket`);
 
             await db.collection("stats").updateOne({}, { $set: { activeVisitors: activeVisitors.size } });
 
             const currentStats = await db.collection("stats").findOne({});
-
             broadcastMessage(currentStats);
         });
 
@@ -38,7 +38,12 @@ module.exports = async (ws, req, db, logger, visitorId) => {
 };
 
 const broadcastMessage = (message) => {
-    for (const [ws] of activeVisitors) {
-            ws.send(message);
+    const messageString = JSON.stringify(message); 
+    for (const [visitorId, ws] of activeVisitors) {
+        if (ws && typeof ws.send === 'function') {
+            ws.send(messageString);
+        } else {
+            console.error(`Invalid WebSocket for visitor ${visitorId}`);
+        }
     }
 };
