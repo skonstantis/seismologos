@@ -1,4 +1,4 @@
-module.exports = async (activeVisitors, ws, req, db, logger, visitorId) => {
+module.exports = async (activeVisitors, activeUsers, ws, req, db, logger, visitorId) => {
     try {
         activeVisitors.set(visitorId, ws);
 
@@ -6,7 +6,7 @@ module.exports = async (activeVisitors, ws, req, db, logger, visitorId) => {
 
         const currentStats = await db.collection("stats").findOne({});
         
-        broadcastMessage(currentStats, logger);
+        broadcastMessage(currentStats, logger, activeVisitors, activeUsers,);
 
         ws.on("message", (message) => {
         });
@@ -17,7 +17,7 @@ module.exports = async (activeVisitors, ws, req, db, logger, visitorId) => {
             await db.collection("stats").updateOne({}, { $set: { activeVisitors: activeVisitors.size } });
 
             const currentStats = await db.collection("stats").findOne({});
-            broadcastMessage(currentStats, logger);
+            broadcastMessage(currentStats, logger, activeVisitors, activeUsers,);
         });
 
         ws.on("error", (error) => {
@@ -31,7 +31,7 @@ module.exports = async (activeVisitors, ws, req, db, logger, visitorId) => {
     }
 };
 
-const broadcastMessage = (message, logger) => {
+const broadcastMessage = (message, logger, activeVisitors, activeUsers) => {
     const messageString = JSON.stringify(message); 
     for (const [username, { ws }] of activeUsers) {
         if (ws && typeof ws.send === 'function') {

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-module.exports = async (activeUsers, ws, req, db, logger) => {
+module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
     const [path, query] = req.url.split("?");
     const pathSegments = path.split("/");
     const username = pathSegments.pop();
@@ -26,7 +26,7 @@ module.exports = async (activeUsers, ws, req, db, logger) => {
         await db.collection("stats").updateOne({}, { $set: { activeUsers: activeUsers.size } });
 
         const currentStats = await db.collection("stats").findOne({});
-        broadcastMessage(currentStats, logger);
+        broadcastMessage(currentStats, logger, activeUsers, activeVisitors);
 
         ws.on("message", async (message) => {
             
@@ -44,7 +44,7 @@ module.exports = async (activeUsers, ws, req, db, logger) => {
             );
 
             const updatedStats = await db.collection("stats").findOne({});
-            broadcastMessage(updatedStats, logger);
+            broadcastMessage(updatedStats, logger, activeUsers, activeVisitors);
         });
 
         ws.on("error", (error) => {
@@ -57,7 +57,7 @@ module.exports = async (activeUsers, ws, req, db, logger) => {
     }
 };
 
-const broadcastMessage = (message, logger) => {
+const broadcastMessage = (message, logger, activeUsers, activeVisitors) => {
     const messageString = JSON.stringify(message);
     for (const [username, { ws }] of activeUsers) {
         if (ws && typeof ws.send === 'function') {

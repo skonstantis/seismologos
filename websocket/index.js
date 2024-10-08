@@ -11,11 +11,11 @@ module.exports = (ws, req, db, logger) => {
 
   switch (basePath) {
     case 'activeUsers':
-      activeUsersHandler(activeUsers, ws, req, db, logger);
+      activeUsersHandler(activeUsers, activeVisitors, ws, req, db, logger);
       break;
     case 'activeVisitors':
       const visitorId = uuidv4();
-      activeVisitorsHandler(activeVisitors, ws, req, db, logger, visitorId);
+      activeVisitorsHandler(activeVisitors, activeUsers, ws, req, db, logger, visitorId);
       break;
     default:
       logger.warn(`Unknown WebSocket path: ${req.url}`);
