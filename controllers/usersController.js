@@ -149,7 +149,7 @@ const loginUser = async (req, res) => {
       );
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_LOGIN_SECRET, { expiresIn: '6h' });
+    const token = jwt.sign({ userId: user._id, username: user.username }, process.env.JWT_LOGIN_SECRET, { expiresIn: '6h' });
     
     const lastLogin = user.lastLogin;
     await db.collection('users').updateOne(

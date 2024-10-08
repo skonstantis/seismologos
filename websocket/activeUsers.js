@@ -19,8 +19,8 @@ module.exports = (ws, req, db, logger) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_LOGIN_SECRET);
 
-    if (decoded !== username) {
-      logger.info("2 " + decoded + " " + username + " " + token);
+    if (decoded.username !== username) {
+      logger.info("2 " + decoded.username + " " + username + " " + token);
       ws.close(4001, "Unauthorized: Invalid username");
       return;
     }
