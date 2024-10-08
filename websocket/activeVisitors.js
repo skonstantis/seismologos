@@ -10,7 +10,7 @@ module.exports = async (ws, req, db, logger, visitorId) => {
 
         const currentStats = await db.collection("stats").findOne({});
 
-        broadcastMessage(currentStats.json());
+        broadcastMessage(currentStats);
 
         ws.on("message", (message) => {
         });
@@ -23,7 +23,7 @@ module.exports = async (ws, req, db, logger, visitorId) => {
 
             const currentStats = await db.collection("stats").findOne({});
 
-            broadcastMessage(currentStats.json());
+            broadcastMessage(currentStats);
         });
 
         ws.on("error", (error) => {
