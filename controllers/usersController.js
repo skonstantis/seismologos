@@ -283,7 +283,7 @@ const createUser = async (req, res) => {
     const token = jwt.sign({ userId: result.insertedId }, process.env.JWT_VERIFICATION_SECRET, { expiresIn: '7d' });
 
     try {
-      await sendVerificationEmail(user.auth.email, user.auth.username, token); 
+      await sendVerificationEmail(user.email, user.username, token); 
     } catch (emailError) {
       logger.error('EMAIL ERROR:', emailError);
       return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
