@@ -6,18 +6,18 @@ const verifiedFields = {
         active: null,
     },
     password:{
-        wrongPassword: 0,
+        wrong: 0,
     },
     login: {
-      lastLogin: null,
-      timesLoggedIn: 0,
-      loginTokens: []
+      last: null,
+      times: 0,
+      tokens: []
     },
     account: {
-      lockedUntil: null,
+      locked: null,
     },
     ids: {
-        oldIds: []
+        old: []
     },
   },
   $unset: {
@@ -29,8 +29,12 @@ const unverifiedFields = {
   $set: {
     created: Date.now(),
     unverified: {
-      threeDaysVerificationNotification: false,
-      oneDayVerificationNotification: false,
+      notifications: {
+        days: {
+          three: false,
+          one: false,
+        },
+      },
     },
     auth: {
       username: null,
@@ -38,30 +42,6 @@ const unverifiedFields = {
       password: null,
     },
   }
-};
-
-const buildUpdateQuery = (fields) => {
-  const query = { $set: {}, $unset: {} };
-
-  if (fields.$set) {
-    for (const key in fields.$set) {
-      if (typeof fields.$set[key] === 'object' && !Array.isArray(fields.$set[key])) {
-        for (const subKey in fields.$set[key]) {
-          query.$set[`${key}.${subKey}`] = fields.$set[key][subKey];
-        }
-      } else {
-        query.$set[key] = fields.$set[key];
-      }
-    }
-  }
-
-  if (fields.$unset) {
-    for (const key in fields.$unset) {
-      query.$unset[key] = fields.$unset[key];
-    }
-  }
-
-  return query;
 };
 
 module.exports = {

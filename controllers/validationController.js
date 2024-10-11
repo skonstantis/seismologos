@@ -109,11 +109,11 @@ const validateSession = async (req, res) => {
       return res.status(404).json({ errors: [{ msg: "ERROR: User not found" }] });
     }
 
-    if (!user.login.loginTokens.includes(token)) {
+    if (!user.login.tokens.includes(token)) {
       return res.status(401).json({ errors: [{ msg: "ERROR: Token is not valid" }] });
     }
 
-    const validTokens = user.login.loginTokens.filter((userToken) => {
+    const validTokens = user.login.tokens.filter((userToken) => {
       try {
         return userToken !== token && jwt.verify(userToken, process.env.JWT_LOGIN_SECRET);
       } catch (err) {
@@ -127,12 +127,12 @@ const validateSession = async (req, res) => {
       { _id: new ObjectId(user._id) },
       {
         $set: {
-          'login.loginTokens': [...validTokens, newToken]
+          'login.tokens': [...validTokens, newToken]
         }
       }
     );
 
-    res.json({ token: newToken, msg: "Session extended", user: { id: user._id, username: user.auth.username, email: user.auth.email, lastLogin: user.login.lastLogin } });
+    res.json({ token: newToken, msg: "Session extended", user: { id: user._id, username: user.auth.username, email: user.auth.email, lastLogin: user.login.last } });
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
     res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });
@@ -203,9 +203,9 @@ const changePasswordValidated = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     user.auth.password = hashedPassword;
-    user.ids.oldIds = user.ids.oldIds ? [...user.ids.oldIds, user._id] : [user._id];
-    user.account.lockedUntil = null;
-    user.login.loginTokens = [];
+    user.ids.old = user.ids.old ? [...user.ids.old, user._id] : [user._id];
+    user.account.locked = null;
+    user.login.tokens = [];
 
     const updatedUser = {
       ...user,

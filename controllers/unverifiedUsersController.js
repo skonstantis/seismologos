@@ -7,7 +7,7 @@ const handleUnverifiedUsers = async (db) => {
 
   const threeDaysLeft = await db.collection('users').find({
     verified: null,
-    'unverified.threeDaysVerificationNotification': false,
+    'unverified.notifications.days.three': false,
     created: {
       $gte: currentTime - expirationTime,
       $lt: currentTime - (expirationTime - (3 * 24 * 60 * 60 * 1000)), // 3 days
@@ -26,13 +26,13 @@ const handleUnverifiedUsers = async (db) => {
 
     await db.collection('users').updateOne(
       { _id: user._id },
-      { $set: { 'unverified.threeDaysVerificationNotification': true } }
+      { $set: { 'unverified.notifications.days.three': true } }
     );
   }
 
   const oneDayLeft = await db.collection('users').find({
     verified: null,
-    'unverified.oneDayVerificationNotification': false,
+    'unverified.notifications.days.one': false,
     created: {
       $gte: currentTime - expirationTime,
       $lt: currentTime - (expirationTime - (1 * 24 * 60 * 60 * 1000)), // 1 day
@@ -51,7 +51,7 @@ const handleUnverifiedUsers = async (db) => {
 
     await db.collection('users').updateOne(
       { _id: user._id },
-      { $set: { 'unverified.oneDayVerificationNotification': true } }
+      { $set: { 'unverified.notifications.days.one': true } }
     );
   }
 

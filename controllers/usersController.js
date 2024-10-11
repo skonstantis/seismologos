@@ -14,7 +14,7 @@ const getUsers = async (req, res) => {
   try {
     const elements = await db
       .collection("users")
-      .find({}, { projection: { username: 1, email: 1, created: 1, verified: 1, lastLogin: 1 } })
+      .find({}, { projection: { 'auth.username': 1, 'auth.email': 1, created: 1, verified: 1, 'login.last': 1 } })
       .skip(page * elementsPerPage)
       .limit(elementsPerPage)
       .sort()
@@ -35,7 +35,7 @@ const getUserById = async (req, res) => {
   try {
     const doc = await db
       .collection("users")
-      .findOne({ projection: { username: 1, email: 1, created: 1, verified: 1, lastLogin: 1 } });
+      .findOne({ projection: { 'auth.username': 1, 'auth.email': 1, created: 1, verified: 1, 'login.last': 1 } });
     if (!doc) {
       return res
         .status(404)
@@ -78,8 +78,8 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: "Επιβεβαιώστε τη διεύθυνση e-mail για να ενεργοποιηθεί ο λογαριασμός σας" }] });
     }
 
-    if (user.account.lockedUntil && Date.now() < user.account.lockedUntil) {
-      const lockedUntilDate = new Date(user.account.lockedUntil);
+    if (user.account.locked && Date.now() < user.account.locked) {
+      const lockedUntilDate = new Date(user.account.locked);
       const formattedLockedUntilGreekTime = lockedUntilDate.toLocaleString('el-GR', {
         timeZone: 'Europe/Athens',
         year: 'numeric',
@@ -94,10 +94,10 @@ const loginUser = async (req, res) => {
       return res.status(403).json({ errors: [{ msg: `Ο λογαριασμός σας είναι κλειδωμένος μέχρι ${formattedLockedUntilGreekTime}` }] });
     }
 
-    if (user.account.lockedUntil) {
+    if (user.account.locked) {
       await db.collection('users').updateOne(
         { _id: new ObjectId(user._id) },
-        { $set: { 'account.lockedUntil': null } }
+        { $set: { 'account.locked': null } }
       );
     }
 
@@ -105,15 +105,15 @@ const loginUser = async (req, res) => {
     if (!passwordMatch) {
       await db.collection('users').updateOne(
         { _id: new ObjectId(user._id) },
-        { $inc: { 'password.wrongPassword': 1 } }
+        { $inc: { 'password.wrong': 1 } }
       );
 
       const updatedUser = await db.collection('users').findOne({ _id: new ObjectId(user._id) });
 
-      if (updatedUser.password.wrongPassword >= 10) {
+      if (updatedUser.password.wrong >= 10) {
         await db.collection('users').updateOne(
           { _id: new ObjectId(updatedUser._id) },
-          { $set: { 'account.lockedUntil': Date.now() + 1000 * 60 * 60 * 24, 'password.wrongPassword': 0, 'login.loginTokens': [] } }
+          { $set: { 'account.locked': Date.now() + 1000 * 60 * 60 * 24, 'password.wrong': 0, 'login.tokens': [] } }
         );
         
         const token = jwt.sign({ userId: user._id, purpose: 'changePassword' }, process.env.JWT_PASSWORD_SECRET, { expiresIn: '1d' });
@@ -127,15 +127,15 @@ const loginUser = async (req, res) => {
         return res.status(400).json({ errors: [{ msg: "Ο λογαριασμός σας έχει κλειδωθεί για 24 ώρες" }] });
       }
 
-      if (updatedUser.password.wrongPassword >= 5) {
-        return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός. Έχετε ακόμη " + (10 - updatedUser.password.wrongPassword) + ((10 - updatedUser.password.wrongPassword) == 1 ? " προσπάθεια " : " προσπάθειες") + " πρωτού ο λογαριασμός σας κλειδωθεί για 24 ώρες" }] });
+      if (updatedUser.password.wrong >= 5) {
+        return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός. Έχετε ακόμη " + (10 - updatedUser.password.wrong) + ((10 - updatedUser.password.wrong) == 1 ? " προσπάθεια " : " προσπάθειες") + " πρωτού ο λογαριασμός σας κλειδωθεί για 24 ώρες" }] });
       }
 
       return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός" }] });
     }
 
-    if (user.login.loginTokens.length > 0) {
-      user.login.loginTokens = user.login.loginTokens.filter((token) => {
+    if (user.login.tokens.length > 0) {
+      user.login.tokens = user.login.tokens.filter((token) => {
         try {
           jwt.verify(token, process.env.JWT_LOGIN_SECRET);
           return true; 
@@ -146,22 +146,22 @@ const loginUser = async (req, res) => {
 
       await db.collection('users').updateOne(
         { _id: user._id },
-        { $set: { loginTokens: user.login.loginTokens } }
+        { $set: { 'login.tokens': user.login.tokens } } 
       );
     }
 
     const token = jwt.sign({ userId: user._id, username: user.auth.username }, process.env.JWT_LOGIN_SECRET, { expiresIn: '6h' });
     
-    const lastLogin = user.login.lastLogin;
+    const lastLogin = user.login.last;
     await db.collection('users').updateOne(
       { _id: new ObjectId(user._id) },
       {
         $set: {
-          'login.lastLogin': Date.now(),
-          'password.wrongPassword': 0,
-          'login.loginTokens': [...user.login.loginTokens, token] 
+          'login.last': Date.now(),
+          'password.wrong': 0,
+          'login.tokens': [...user.login.tokens, token] 
         },
-        $inc: { 'login.timesLoggedIn': 1 }
+        $inc: { 'login.times': 1 }
       }
     );
 
@@ -196,19 +196,19 @@ const logoutUser = async (req, res) => {
         return res.status(404).json({ errors: [{ msg: "User not found" }] });
       }
       else{
-        if (!user.ids.oldIds || !user.ids.oldIds.includes(new ObjectId(id))) {
+        if (!user.ids.old || !user.ids.old.includes(new ObjectId(id))) {
           return res.status(404).json({ errors: [{ msg: "User not found" }] });
         }
       }
     }
 
-    if (!user.login.loginTokens || !user.login.loginTokens.includes(token)) {
+    if (!user.login.tokens || !user.login.tokens.includes(token)) {
       return res.status(400).json({ errors: [{ msg: "Token not found" }] });
     }
 
     await db.collection('users').updateOne(
       { _id: new ObjectId(id) },
-      { $pull: { 'login.loginTokens': token } }
+      { $pull: { 'login.tokens': token } }
     );
 
     res.status(200).json({ msg: "Successfully logged out" });
