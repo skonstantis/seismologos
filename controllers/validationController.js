@@ -112,7 +112,7 @@ const validateSession = async (req, res) => {
       return res.status(401).json({ errors: [{ msg: "ERROR: Token is not valid" }] });
     }
 
-    const validTokens = user.login.oginTokens.filter((userToken) => {
+    const validTokens = user.login.loginTokens.filter((userToken) => {
       try {
         return userToken !== token && jwt.verify(userToken, process.env.JWT_LOGIN_SECRET);
       } catch (err) {

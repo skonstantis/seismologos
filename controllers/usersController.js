@@ -161,7 +161,7 @@ const loginUser = async (req, res) => {
           'password.wrongPassword': 0,
           'login.loginTokens': [...user.login.loginTokens, token] 
         },
-        $inc: { timesLoggedIn: 1 }
+        $inc: { 'login.timesLoggedIn': 1 }
       }
     );
 

@@ -25,6 +25,11 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
 
         await db.collection("stats").updateOne({}, { $set: { activeUsers: activeUsers.size } });
 
+        await db.collection("users").updateOne(
+            { 'auth.username': username },
+            { $set: { 'activity.active': 0 } }
+        );
+
         const currentStats = await db.collection("stats").findOne({});
         broadcastMessage(currentStats, logger, activeUsers, activeVisitors);
 
@@ -39,8 +44,8 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
             await db.collection("stats").updateOne({}, { $set: { activeUsers: activeUsers.size } });
 
             await db.collection("users").updateOne(
-                { username: username },
-                { $set: { active: lastActiveTime } }
+                { 'auth.username': username },
+                { $set: { 'activity.active': lastActiveTime } }
             );
 
             const updatedStats = await db.collection("stats").findOne({});
