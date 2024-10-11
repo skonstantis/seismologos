@@ -265,8 +265,11 @@ const createUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(user.password, 10);
 
-    const updateQuery = buildUpdateQuery(unverifiedFields);
-    const result = await db.collection('users').insertOne(updateQuery);
+    const unverifiedUser = {
+      ...unverifiedFields.$set,
+    };
+    
+    const result = await db.collection('users').insertOne(unverifiedUser);
 
     await db.collection('users').updateOne(
       { _id: result.insertedId },
