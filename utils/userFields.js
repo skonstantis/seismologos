@@ -2,7 +2,7 @@ const { ObjectId } = require('mongodb');
 
 const verifiedFields = {
   $set: {
-    verified: null,
+    verified: Date.now(),
     activity:
     {
         active: null,
@@ -29,7 +29,7 @@ const verifiedFields = {
 
 const unverifiedFields = {
   $set: {
-    created: null,
+    created: Date.now(),
     unverified: {
       threeDaysVerificationNotification: false,
       oneDayVerificationNotification: false,

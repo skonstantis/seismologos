@@ -272,7 +272,6 @@ const createUser = async (req, res) => {
       { _id: result.insertedId },
       {
         $set: {
-          created: Date.now(),
           'auth.password': hashedPassword,
           'auth.email': user.email,
           'auth.username': user.username
