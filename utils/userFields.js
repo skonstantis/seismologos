@@ -67,5 +67,4 @@ const buildUpdateQuery = (fields) => {
 module.exports = {
   verifiedFields,
   unverifiedFields,
-  buildUpdateQuery,
 };

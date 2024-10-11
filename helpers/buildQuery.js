@@ -1,4 +1,4 @@
-export const buildQuery = (fields) => {
+const buildQuery = (fields) => {
     const query = { $set: {}, $unset: {} };
   
     if (fields.$set) {
@@ -20,4 +20,8 @@ export const buildQuery = (fields) => {
     }
   
     return query;
+  };
+
+  module.exports = {
+    buildQuery,
   };
