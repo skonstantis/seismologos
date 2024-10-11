@@ -4,7 +4,7 @@ const { logger } = require("../config/logger");
 const fetch = require("node-fetch");
 const jwt = require('jsonwebtoken');
 const { sendVerificationEmail, sendAccountLockedEmail } = require("./emailController");
-const { unverifiedFields, buildUpdateQuery } = require("../utils/userFields");
+const { unverifiedFields } = require("../utils/userFields");
 
 const getUsers = async (req, res) => {
   const db = req.app.locals.db;

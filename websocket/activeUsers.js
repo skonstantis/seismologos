@@ -23,7 +23,7 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
 
         activeUsers.set(username, { ws });
 
-        await db.collection("stats").updateOne({}, { $set: { activeUsers: activeUsers.size } });
+        await db.collection("stats").updateOne({}, { $set: { 'active.users': activeUsers.size } });
 
         await db.collection("users").updateOne(
             { 'auth.username': username },
@@ -41,7 +41,7 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
             const lastActiveTime = new Date().getTime();
             activeUsers.delete(username);
 
-            await db.collection("stats").updateOne({}, { $set: { activeUsers: activeUsers.size } });
+            await db.collection("stats").updateOne({}, { $set: { 'active.users': activeUsers.size } });
 
             await db.collection("users").updateOne(
                 { 'auth.username': username },

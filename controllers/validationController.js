@@ -3,7 +3,8 @@ const { ObjectId } = require("mongodb");
 const jwt = require('jsonwebtoken');
 const { sendVerifiedEmail, sendPasswordChangedEmail, sendForgotPasswordEmail } = require("./emailController");
 const bcrypt = require("bcrypt");
-const { verifiedFields, unverifiedFields, buildUpdateQuery } = require("../utils/userFields");
+const { verifiedFields } = require("../utils/userFields");
+const { buildQuery } = require("../helpers/buildQuery");
 
 const validateUser = async (req, res) => {
   const db = req.app.locals.db;
@@ -62,7 +63,7 @@ const verifyEmail = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: 'Email is already verified' }] });
     }
 
-    const updateQuery = buildUpdateQuery(verifiedFields);
+    const updateQuery = buildQuery(verifiedFields);
     await db.collection('users').updateOne(
       { _id: new ObjectId(userId) },
       updateQuery

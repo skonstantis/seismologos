@@ -1,5 +1,3 @@
-const { ObjectId } = require('mongodb');
-
 const verifiedFields = {
   $set: {
     verified: Date.now(),

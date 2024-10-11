@@ -2,7 +2,7 @@ module.exports = async (activeVisitors, activeUsers, ws, req, db, logger, visito
     try {
         activeVisitors.set(visitorId, ws);
 
-        await db.collection("stats").updateOne({}, { $set: { activeVisitors: activeVisitors.size } });
+        await db.collection("stats").updateOne({}, { $set: { 'active.visitors': activeVisitors.size } });
 
         const currentStats = await db.collection("stats").findOne({});
         
@@ -14,7 +14,7 @@ module.exports = async (activeVisitors, activeUsers, ws, req, db, logger, visito
         ws.on("close", async () => {
             activeVisitors.delete(visitorId); 
 
-            await db.collection("stats").updateOne({}, { $set: { activeVisitors: activeVisitors.size } });
+            await db.collection("stats").updateOne({}, { $set: { 'active.visitors': activeVisitors.size } });
 
             const currentStats = await db.collection("stats").findOne({});
             broadcastMessage(currentStats, logger, activeVisitors, activeUsers,);
@@ -23,7 +23,7 @@ module.exports = async (activeVisitors, activeUsers, ws, req, db, logger, visito
         ws.on("error", (error) => {
             logger.error(`WebSocket error for visitor ${visitorId}:`, error);
             activeVisitors.delete(visitorId);
-            db.collection("stats").updateOne({}, { $set: { activeVisitors: activeVisitors.size } });
+            db.collection("stats").updateOne({}, { $set: { 'active.visitors': activeVisitors.size } });
         });
     } catch (error) {
         logger.error("WebSocket error:", error);

@@ -10,6 +10,8 @@ const cron = require("node-cron");
 const { handleUnverifiedUsers } = require("./controllers/unverifiedUsersController");
 const WebSocket = require("ws");
 const websocketRouter = require('./websocket');
+const { buildQuery } = require("./helpers/buildQuery");
+const { statsFields } = require("./utils/statsFields");
 
 const port = process.env.PORT || 3000;
 const server = express();
@@ -26,7 +28,7 @@ dbConnect(async (err, database) => {
 
     try {
       const statsCollection = database.collection("stats");
-      await statsCollection.updateOne({}, { $set: { activeUsers: 0, activeVisitors: 0 } }, { upsert: true });
+      await statsCollection.updateOne({}, buildQuery(statsFields), { upsert: true });
 
       const httpServer = server.listen(port, () => {
         logger.info(`Server listening on port ${port}`);
