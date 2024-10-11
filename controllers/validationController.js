@@ -11,7 +11,7 @@ const validateUser = async (req, res) => {
   let errors = req.validationErrors || [];
 
   try {
-    if (user.username && await db.collection('users').findOne({ 'auth.username': user.auth.username })) {
+    if (user.username && await db.collection('users').findOne({ 'auth.username': user.username })) {
       errors.push({ msg: 'Το όνομα χρήστη ' + user.username + " χρησιμοποιείται ήδη"});
     }
 
