@@ -201,12 +201,13 @@ const changePasswordValidated = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    user.auth.password = hashedPassword;
+    user.ids.oldIds = user.ids.oldIds ? [...user.ids.oldIds, user._id] : [user._id];
+    user.account.lockedUntil = null;
+    user.login.loginTokens = [];
+
     const updatedUser = {
       ...user,
-      'auth.password': hashedPassword,
-      'ids.oldIds': user.ids.oldIds ? [...user.ids.oldIds, user._id] : [user._id], 
-      'account.lockedUntil': null,
-      'login.loginTokens': [],
       _id: new ObjectId() 
     };
 
