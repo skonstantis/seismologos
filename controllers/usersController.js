@@ -4,6 +4,7 @@ const { logger } = require("../config/logger");
 const fetch = require("node-fetch");
 const jwt = require('jsonwebtoken');
 const { sendVerificationEmail, sendAccountLockedEmail } = require("./emailController");
+const { unverifiedFields, buildUpdateQuery } = require("../utils/userFields");
 
 const getUsers = async (req, res) => {
   const db = req.app.locals.db;
@@ -63,8 +64,8 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: "Εισάγετε Κωδικό Πρόσβασης" }] });
     }
 
-    const user = await db.collection("users").findOne({
-      $or: [{ username: key }, { email: key }]
+    const user = await db.collection('users').findOne({
+      $or: [{ 'auth.username': key }, { 'auth.email': key }]
     });
 
     if (!user) {
@@ -77,8 +78,8 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: "Επιβεβαιώστε τη διεύθυνση e-mail για να ενεργοποιηθεί ο λογαριασμός σας" }] });
     }
 
-    if (user.lockedUntil && Date.now() < user.lockedUntil) {
-      const lockedUntilDate = new Date(user.lockedUntil);
+    if (user.account.lockedUntil && Date.now() < user.account.lockedUntil) {
+      const lockedUntilDate = new Date(user.account.lockedUntil);
       const formattedLockedUntilGreekTime = lockedUntilDate.toLocaleString('el-GR', {
         timeZone: 'Europe/Athens',
         year: 'numeric',
@@ -93,31 +94,31 @@ const loginUser = async (req, res) => {
       return res.status(403).json({ errors: [{ msg: `Ο λογαριασμός σας είναι κλειδωμένος μέχρι ${formattedLockedUntilGreekTime}` }] });
     }
 
-    if (user.lockedUntil) {
+    if (user.account.lockedUntil) {
       await db.collection('users').updateOne(
         { _id: new ObjectId(user._id) },
-        { $set: { lockedUntil: null } }
+        { $set: { 'account.lockedUntil': null } }
       );
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const passwordMatch = await bcrypt.compare(password, user.auth.password);
     if (!passwordMatch) {
       await db.collection('users').updateOne(
         { _id: new ObjectId(user._id) },
-        { $inc: { wrongPassword: 1 } }
+        { $inc: { 'password.wrongPassword': 1 } }
       );
 
       const updatedUser = await db.collection('users').findOne({ _id: new ObjectId(user._id) });
 
-      if (updatedUser.wrongPassword >= 10) {
+      if (updatedUser.password.wrongPassword >= 10) {
         await db.collection('users').updateOne(
           { _id: new ObjectId(updatedUser._id) },
-          { $set: { lockedUntil: Date.now() + 1000 * 60 * 60 * 24, wrongPassword: 0, loginTokens: [] } }
+          { $set: { 'account.lockedUntil': Date.now() + 1000 * 60 * 60 * 24, 'password.wrongPassword': 0, 'login.loginTokens': [] } }
         );
         
         const token = jwt.sign({ userId: user._id, purpose: 'changePassword' }, process.env.JWT_PASSWORD_SECRET, { expiresIn: '1d' });
         try {
-          await sendAccountLockedEmail(user.email, user.username, token);
+          await sendAccountLockedEmail(user.auth.email, user.auth.username, token);
         } catch (emailError) {
           logger.error('EMAIL ERROR:', emailError);
           return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
@@ -126,15 +127,15 @@ const loginUser = async (req, res) => {
         return res.status(400).json({ errors: [{ msg: "Ο λογαριασμός σας έχει κλειδωθεί για 24 ώρες" }] });
       }
 
-      if (updatedUser.wrongPassword >= 5) {
-        return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός. Έχετε ακόμη " + (10 - updatedUser.wrongPassword) + ((10 - updatedUser.wrongPassword) == 1 ? " προσπάθεια " : " προσπάθειες") + " πρωτού ο λογαριασμός σας κλειδωθεί για 24 ώρες" }] });
+      if (updatedUser.password.wrongPassword >= 5) {
+        return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός. Έχετε ακόμη " + (10 - updatedUser.password.wrongPassword) + ((10 - updatedUser.password.wrongPassword) == 1 ? " προσπάθεια " : " προσπάθειες") + " πρωτού ο λογαριασμός σας κλειδωθεί για 24 ώρες" }] });
       }
 
       return res.status(400).json({ errors: [{ msg: "Ο κωδικός πρόσβασης δεν είναι σωστός" }] });
     }
 
-    if (user.loginTokens.length > 0) {
-      user.loginTokens = user.loginTokens.filter((token) => {
+    if (user.login.loginTokens.length > 0) {
+      user.login.loginTokens = user.login.loginTokens.filter((token) => {
         try {
           jwt.verify(token, process.env.JWT_LOGIN_SECRET);
           return true; 
@@ -145,26 +146,26 @@ const loginUser = async (req, res) => {
 
       await db.collection('users').updateOne(
         { _id: user._id },
-        { $set: { loginTokens: user.loginTokens } }
+        { $set: { loginTokens: user.login.loginTokens } }
       );
     }
 
-    const token = jwt.sign({ userId: user._id, username: user.username }, process.env.JWT_LOGIN_SECRET, { expiresIn: '6h' });
+    const token = jwt.sign({ userId: user._id, username: user.auth.username }, process.env.JWT_LOGIN_SECRET, { expiresIn: '6h' });
     
-    const lastLogin = user.lastLogin;
+    const lastLogin = user.login.lastLogin;
     await db.collection('users').updateOne(
       { _id: new ObjectId(user._id) },
       {
         $set: {
-          lastLogin: Date.now(),
-          wrongPassword: 0,
-          loginTokens: [...user.loginTokens, token] 
+          'login.lastLogin': Date.now(),
+          'password.wrongPassword': 0,
+          'login.loginTokens': [...user.login.loginTokens, token] 
         },
         $inc: { timesLoggedIn: 1 }
       }
     );
 
-    res.json({ token: token, msg: "Session created", user: { id: user._id, username: user.username, email: user.email, lastLogin: lastLogin } });
+    res.json({ token: token, msg: "Session created", user: { id: user._id, username: user.auth.username, email: user.auth.email, lastLogin: lastLogin } });
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
     res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });
@@ -184,30 +185,30 @@ const logoutUser = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: "Id is missing" }] });
     }
 
-    const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
+    const user = await db.collection('users').findOne({ _id: new ObjectId(id) });
 
     if (!user) {
       if (!username) {
         return res.status(400).json({ errors: [{ msg: "Username is missing" }] });
       }
-      user = await db.collection("users").findOne({ username: username });
+      user = await db.collection('users').findOne({ 'auth.username': username });
       if (!user) {
         return res.status(404).json({ errors: [{ msg: "User not found" }] });
       }
       else{
-        if (!user.oldIds || !user.oldIds.includes(new ObjectId(id))) {
+        if (!user.ids.oldIds || !user.ids.oldIds.includes(new ObjectId(id))) {
           return res.status(404).json({ errors: [{ msg: "User not found" }] });
         }
       }
     }
 
-    if (!user.loginTokens || !user.loginTokens.includes(token)) {
+    if (!user.login.loginTokens || !user.login.loginTokens.includes(token)) {
       return res.status(400).json({ errors: [{ msg: "Token not found" }] });
     }
 
-    await db.collection("users").updateOne(
+    await db.collection('users').updateOne(
       { _id: new ObjectId(id) },
-      { $pull: { loginTokens: token } }
+      { $pull: { 'login.loginTokens': token } }
     );
 
     res.status(200).json({ msg: "Successfully logged out" });
@@ -218,7 +219,6 @@ const logoutUser = async (req, res) => {
   }
 };
 
-
 const createUser = async (req, res) => {
   const db = req.app.locals.db;
   const user = req.body;
@@ -226,7 +226,7 @@ const createUser = async (req, res) => {
 
   const now = Date.now();
   user.created = now;
-
+  
   try {
     if (!user.recaptchaToken) {
       return res.status(400).json({ errors: [{ msg: "Αποτυχία reCAPTCHA" }] });
@@ -249,13 +249,13 @@ const createUser = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: "Αποτυχία reCAPTCHA" }] });
     }
 
-    if (await db.collection("users").findOne({ username: user.username })) {
+    if (await db.collection('users').findOne({ 'auth.username': user.username })) {
       errors.push({
         msg: "Το όνομα χρήστη " + user.username + " χρησιμοποιείται ήδη",
       });
     }
 
-    if (await db.collection("users").findOne({ email: user.email })) {
+    if (await db.collection('users').findOne({ 'auth.email': user.email })) {
       errors.push({ msg: "Το email " + user.email + " χρησιμοποιείται ήδη" });
     }
 
@@ -264,20 +264,23 @@ const createUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(user.password, 10);
-    user.password = hashedPassword;
+    user.auth.password = hashedPassword;
+    user.auth.email = user.email;
+    user.auth.username = user.username;
 
     delete user.recaptchaToken;
+    delete user.email;    
+    delete user.username;
 
-    user.verified = null;
-    user.threeDaysVerificationNotification = false;
-    user.oneDayVerificationNotification = false;
-
-    const result = await db.collection("users").insertOne(user);
+    const updateQuery = buildUpdateQuery(unverifiedFields);
+    await db.collection('users').insertOne(
+      updateQuery
+    );
 
     const token = jwt.sign({ userId: result.insertedId }, process.env.JWT_VERIFICATION_SECRET, { expiresIn: '7d' });
 
     try {
-      await sendVerificationEmail(user.email, user.username, token); 
+      await sendVerificationEmail(user.auth.email, user.auth.username, token); 
     } catch (emailError) {
       logger.error('EMAIL ERROR:', emailError);
       return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
@@ -320,7 +323,7 @@ const updateUser = async (req, res) => {
         .json({ errors: [{ msg: "ERROR: No user found with such id" }] });
     }
 
-    const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+    const passwordMatch = await bcrypt.compare(currentPassword, user.auth.password);
     if (!passwordMatch) {
       return res
         .status(403)
@@ -366,7 +369,7 @@ const deleteUser = async (req, res) => {
         .json({ errors: [{ msg: "ERROR: No user found with such id" }] });
     }
 
-    const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+    const passwordMatch = await bcrypt.compare(currentPassword, user.auth.password);
     if (!passwordMatch) {
       return res
         .status(403)

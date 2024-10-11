@@ -5,9 +5,9 @@ const handleUnverifiedUsers = async (db) => {
   const expirationTime = 7 * 24 * 60 * 60 * 1000; // 7 days
   const currentTime = Date.now();
 
-  const threeDaysLeft = await db.collection("users").find({
+  const threeDaysLeft = await db.collection('users').find({
     verified: null,
-    threeDaysVerificationNotification: false,
+    'unverified.threeDaysVerificationNotification': false,
     created: {
       $gte: currentTime - expirationTime,
       $lt: currentTime - (expirationTime - (3 * 24 * 60 * 60 * 1000)), // 3 days
@@ -24,15 +24,15 @@ const handleUnverifiedUsers = async (db) => {
       return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
     }
 
-    await db.collection("users").updateOne(
+    await db.collection('users').updateOne(
       { _id: user._id },
-      { $set: { threeDaysVerificationNotification: true } }
+      { $set: { 'unverified.threeDaysVerificationNotification': true } }
     );
   }
 
-  const oneDayLeft = await db.collection("users").find({
+  const oneDayLeft = await db.collection('users').find({
     verified: null,
-    oneDayVerificationNotification: false,
+    'unverified.oneDayVerificationNotification': false,
     created: {
       $gte: currentTime - expirationTime,
       $lt: currentTime - (expirationTime - (1 * 24 * 60 * 60 * 1000)), // 1 day
@@ -49,27 +49,27 @@ const handleUnverifiedUsers = async (db) => {
       return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
     }
 
-    await db.collection("users").updateOne(
+    await db.collection('users').updateOne(
       { _id: user._id },
-      { $set: { oneDayVerificationNotification: true } }
+      { $set: { 'unverified.oneDayVerificationNotification': true } }
     );
   }
 
-  const unverifiedUsers = await db.collection("users").find({
+  const unverifiedUsers = await db.collection('users').find({
     verified: null,
     created: { $lt: currentTime - expirationTime },
   }).toArray();
 
   for (const user of unverifiedUsers) {
     try {
-      await sendDeletionEmail(user.email, user.username); 
+      await sendDeletionEmail(user.auth.email, user.auth.username); 
     } catch (emailError) {
       logger.error('EMAIL ERROR:', emailError);
       return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
     }
   }
 
-  const result = await db.collection("users").deleteMany({
+  const result = await db.collection('users').deleteMany({
     verified: null,
     created: { $lt: currentTime - expirationTime },
   });

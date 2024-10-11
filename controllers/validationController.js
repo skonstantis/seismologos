@@ -3,6 +3,7 @@ const { ObjectId } = require("mongodb");
 const jwt = require('jsonwebtoken');
 const { sendVerifiedEmail, sendPasswordChangedEmail, sendForgotPasswordEmail } = require("./emailController");
 const bcrypt = require("bcrypt");
+const { verifiedFields, unverifiedFields, buildUpdateQuery } = require("../utils/userFields");
 
 const validateUser = async (req, res) => {
   const db = req.app.locals.db;
@@ -10,11 +11,11 @@ const validateUser = async (req, res) => {
   let errors = req.validationErrors || [];
 
   try {
-    if (user.username && await db.collection('users').findOne({ username: user.username })) {
+    if (user.username && await db.collection('users').findOne({ 'auth.username': user.auth.username })) {
       errors.push({ msg: 'Το όνομα χρήστη ' + user.username + " χρησιμοποιείται ήδη"});
     }
 
-    if (user.email && await db.collection('users').findOne({ email: user.email })) {
+    if (user.email && await db.collection('users').findOne({ 'auth.email': user.email })) {
       errors.push({ msg: 'Το email ' + user.email + " χρησιμοποιείται ήδη"});
     }
       
@@ -61,26 +62,14 @@ const verifyEmail = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: 'Email is already verified' }] });
     }
 
+    const updateQuery = buildUpdateQuery(verifiedFields);
     await db.collection('users').updateOne(
       { _id: new ObjectId(userId) },
-      {
-        $set: {
-          verified: Date.now(),
-          lastLogin: null,
-          timesLoggedIn: 0,
-          wrongPassword: 0,
-          lockedUntil: null,
-          loginTokens: []
-        },
-        $unset: {
-          threeDaysVerificationNotification: "",
-          oneDayVerificationNotification: ""
-        }
-      }
+      updateQuery
     );
 
     try {
-      await sendVerifiedEmail(user.email, user.username);
+      await sendVerifiedEmail(user.auth.email, user.auth.username);
     } catch (emailError) {
       logger.error('EMAIL ERROR:', emailError);
       return res.status(500).json({ msg: 'EMAIL ERROR: Could not send reset email' });
@@ -119,11 +108,11 @@ const validateSession = async (req, res) => {
       return res.status(404).json({ errors: [{ msg: "ERROR: User not found" }] });
     }
 
-    if (!user.loginTokens.includes(token)) {
+    if (!user.login.loginTokens.includes(token)) {
       return res.status(401).json({ errors: [{ msg: "ERROR: Token is not valid" }] });
     }
 
-    const validTokens = user.loginTokens.filter((userToken) => {
+    const validTokens = user.login.oginTokens.filter((userToken) => {
       try {
         return userToken !== token && jwt.verify(userToken, process.env.JWT_LOGIN_SECRET);
       } catch (err) {
@@ -131,18 +120,18 @@ const validateSession = async (req, res) => {
       }
     });
 
-    const newToken = jwt.sign({ userId: user._id, username: user.username }, process.env.JWT_LOGIN_SECRET, { expiresIn: '6h' });
+    const newToken = jwt.sign({ userId: user._id, username: user.auth.username }, process.env.JWT_LOGIN_SECRET, { expiresIn: '6h' });
 
     await db.collection('users').updateOne(
       { _id: new ObjectId(user._id) },
       {
         $set: {
-          loginTokens: [...validTokens, newToken]
+          'login.loginTokens': [...validTokens, newToken]
         }
       }
     );
 
-    res.json({ token: newToken, msg: "Session extended", user: { id: user._id, username: user.username, email: user.email, lastLogin: user.lastLogin } });
+    res.json({ token: newToken, msg: "Session extended", user: { id: user._id, username: user.auth.username, email: user.auth.email, lastLogin: user.login.lastLogin } });
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
     res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });
@@ -214,10 +203,10 @@ const changePasswordValidated = async (req, res) => {
 
     const updatedUser = {
       ...user,
-      password: hashedPassword,
-      oldIds: user.oldIds ? [...user.oldIds, user._id] : [user._id], 
-      lockedUntil: null,
-      loginTokens: [],
+      'auth.password': hashedPassword,
+      'ids.oldIds': user.ids.oldIds ? [...user.ids.oldIds, user._id] : [user._id], 
+      'account.lockedUntil': null,
+      'login.loginTokens': [],
       _id: new ObjectId() 
     };
 
@@ -226,7 +215,7 @@ const changePasswordValidated = async (req, res) => {
     await db.collection('users').deleteOne({ _id: new ObjectId(userId) });
     
     try {
-      await sendPasswordChangedEmail(user.email, user.username); 
+      await sendPasswordChangedEmail(user.auth.email, user.auth.username); 
     } catch (emailError) {
       logger.error('EMAIL ERROR:', emailError);
       return res.status(500).json({ msg: 'EMAIL ERROR: Could not send email' });
@@ -258,13 +247,13 @@ const forgotPassword = async (req, res) => {
       return res.status(400).json({ errors });
     }
 
-    const user = await db.collection('users').findOne({ email: email });
+    const user = await db.collection('users').findOne({ 'auth.email': email });
     if (user) {
       if(!user.verified)
         return res.status(400).json({ errors: [{ msg: "Η διεύθυνση e-mail σας δεν είναι επιβεβαιωμένη." }] });
       const token = jwt.sign({ userId: user._id, purpose: 'changePassword' }, process.env.JWT_PASSWORD_SECRET, { expiresIn: '1d' });
       try {
-        await sendForgotPasswordEmail(user.email, user.username, token); 
+        await sendForgotPasswordEmail(user.auth.email, user.auth.username, token); 
       } catch (emailError) {
         logger.error('EMAIL ERROR:', emailError);
         return res.status(500).json({ msg: 'EMAIL ERROR: Could not send email' });
@@ -277,7 +266,6 @@ const forgotPassword = async (req, res) => {
     res.status(500).json({ msg: 'DATABASE ERROR: Could not validate document' });
   }
 };
-
 
 module.exports = {
   validateUser,
