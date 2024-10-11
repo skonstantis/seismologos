@@ -264,19 +264,22 @@ const createUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(user.password, 10);
-    user.auth.password = hashedPassword;
-    user.auth.email = user.email;
-    user.auth.username = user.username;
-
-    delete user.recaptchaToken;
-    delete user.email;    
-    delete user.username;
 
     const updateQuery = buildUpdateQuery(unverifiedFields);
-    await db.collection('users').insertOne(
-      updateQuery
-    );
+    const result = await db.collection('users').insertOne(updateQuery);
 
+    await db.collection('users').updateOne(
+      { _id: result.insertedId },
+      {
+        $set: {
+          'auth.password': hashedPassword,
+          'auth.email': user.email,
+          'auth.username': user.username
+        },
+        $inc: { timesLoggedIn: 1 }
+      }
+    );
+    
     const token = jwt.sign({ userId: result.insertedId }, process.env.JWT_VERIFICATION_SECRET, { expiresIn: '7d' });
 
     try {
