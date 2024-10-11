@@ -223,9 +223,6 @@ const createUser = async (req, res) => {
   const db = req.app.locals.db;
   const user = req.body;
   const errors = req.validationErrors || [];
-
-  const now = Date.now();
-  user.created = now;
   
   try {
     if (!user.recaptchaToken) {
@@ -275,11 +272,11 @@ const createUser = async (req, res) => {
       { _id: result.insertedId },
       {
         $set: {
+          created: Date.now(),
           'auth.password': hashedPassword,
           'auth.email': user.email,
           'auth.username': user.username
-        },
-        $inc: { timesLoggedIn: 1 }
+        }
       }
     );
     
