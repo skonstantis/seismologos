@@ -10,7 +10,7 @@ module.exports = async (activeVisitors, activeUsers, ws, req, db, logger, visito
         const currentStats = await db.collection("stats").findOne({});
         broadcastStats(currentStats, logger, activeVisitors, activeUsers);
 
-        broadcastActivity(logger, activeUsers, activeVisitors);
+        broadcastActivity(logger, [], activeVisitors.get(visitorId));
 
         ws.on("message", (message) => {
         });
