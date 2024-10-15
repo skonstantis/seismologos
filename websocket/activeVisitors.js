@@ -9,8 +9,12 @@ module.exports = async (activeVisitors, activeUsers, ws, req, db, logger, visito
 
         const currentStats = await db.collection("stats").findOne({});
         broadcastStats(currentStats, logger, activeVisitors, activeUsers);
+        
+        const visitorData = activeVisitors.get(visitorId);
+        const visitorDataMap = new Map();
+        visitorDataMap.set(visitorId, visitorData);
+        broadcastActivity(logger, db, new Map(), visitorDataMap);
 
-        broadcastActivity(logger, db, activeUsers, activeVisitors.get(visitorId));
 
         ws.on("message", (message) => {
         });
