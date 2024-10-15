@@ -54,9 +54,9 @@ dbConnect(async (err, database) => {
 
       cron.schedule('* * * * *', async () => {
         try {
-          await broadcastActivity(logger, db, activeUsers, activeVisitors);
+          await broadcastActivity(logger, server.locals.db, activeUsers, activeVisitors);
         } catch (error) {
-          logger.error("Error deleting expired users:", error);
+          logger.error("Error broadcasting activity:", error);
         }
       }, {
           scheduled: true
