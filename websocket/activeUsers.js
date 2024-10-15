@@ -1,4 +1,6 @@
 const jwt = require("jsonwebtoken");
+const { broadcastStats } = require("./broadcasts/broadcastStats");
+const { broadcastActivity } = require("./broadcasts/broadcastActivity");
 
 module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
     const [path, query] = req.url.split("?");
@@ -21,7 +23,7 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
             return;
         }
 
-        activeUsers.set(username, { ws });
+        activeUsers.set(username, { ws, lastActive: Date.now() });
 
         await db.collection("stats").updateOne({}, { $set: { 'active.users': activeUsers.size } });
 
@@ -31,10 +33,11 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
         );
 
         const currentStats = await db.collection("stats").findOne({});
-        broadcastMessage(currentStats, logger, activeUsers, activeVisitors);
+        broadcastStats(currentStats, logger, activeUsers, activeVisitors);
+
+        broadcastActivity(logger, activeUsers, activeVisitors);
 
         ws.on("message", async (message) => {
-            
         });
 
         ws.on("close", async () => {
@@ -49,7 +52,7 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
             );
 
             const updatedStats = await db.collection("stats").findOne({});
-            broadcastMessage(updatedStats, logger, activeUsers, activeVisitors);
+            broadcastStats(updatedStats, logger, activeUsers, activeVisitors);
         });
 
         ws.on("error", (error) => {
@@ -59,23 +62,5 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
     } catch (error) {
         logger.error("WebSocket authentication error:", error);
         ws.close(4000, "Unauthorized: Invalid token");
-    }
-};
-
-const broadcastMessage = (message, logger, activeUsers, activeVisitors) => {
-    const messageString = JSON.stringify(message);
-    for (const [username, { ws }] of activeUsers) {
-        if (ws && typeof ws.send === 'function') {
-            ws.send(messageString);
-        } else {
-            logger.error(`Invalid WebSocket for user ${username}`);
-        }
-    }
-    for (const [visitorId, ws] of activeVisitors) {
-        if (ws && typeof ws.send === 'function') {
-            ws.send(messageString);
-        } else {
-            logger.error(`Invalid WebSocket for visitor ${visitorId}`);
-        }
     }
 };
