@@ -1,4 +1,4 @@
-exports.broadcastStats = (message, logger, activeVisitors, activeUsers) => {
+const broadcastStats = (message, logger, activeVisitors, activeUsers) => {
     const messageString = JSON.stringify(message); 
     for (const [username, { ws }] of activeUsers) {
         if (ws && typeof ws.send === 'function') {
@@ -14,4 +14,8 @@ exports.broadcastStats = (message, logger, activeVisitors, activeUsers) => {
             logger.error(`Invalid WebSocket for visitor ${visitorId}`);
         }
     }
+};
+
+module.exports = {
+    broadcastStats,
 };
