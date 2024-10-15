@@ -16,6 +16,7 @@ const broadcastActivity = async (logger, db, activeUsers, activeVisitors) => {
             const lastActive = user.activity.active;
             const elapsedTime = lastActive ? Date.now() - lastActive : null;
             let status = 'ενεργός τώρα';
+            let shortStatus = 'τώρα';
 
             if (elapsedTime !== null && elapsedTime > 0) {
                 status = formatElapsedTime(elapsedTime);
