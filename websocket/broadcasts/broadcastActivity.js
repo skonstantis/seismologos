@@ -1,5 +1,3 @@
-const { formatElapsedTime, formatElapsedTimeShort } = require("../../helpers/formatElapsedTime");
-
 const broadcastActivity = async (logger, db, activeUsers, activeVisitors) => {
     const messageWithActivityStatus = {
         userStatuses: []
@@ -15,15 +13,10 @@ const broadcastActivity = async (logger, db, activeUsers, activeVisitors) => {
             const username = user.auth.username;
             const lastActive = user.activity.active;
             const elapsedTime = lastActive ? Date.now() - lastActive : null;
-            let status = 'ενεργός τώρα';
-            let shortStatus = 'τώρα';
 
-            if (elapsedTime !== null && elapsedTime > 0) {
-                status = formatElapsedTime(elapsedTime);
-                shortStatus = formatElapsedTimeShort(elapsedTime);
+            if (elapsedTime !== null) {
+                messageWithActivityStatus.userStatuses.push({ username, elapsedTime });
             }
-
-            messageWithActivityStatus.userStatuses.push({ username, status, shortStatus });
         }
     } catch (error) {
         logger.error("Error fetching users from database:", error);
