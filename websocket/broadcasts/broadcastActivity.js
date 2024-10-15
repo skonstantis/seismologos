@@ -12,7 +12,7 @@ const broadcastActivity = async (logger, db, activeUsers, activeVisitors) => {
         for (const user of users) {
             const username = user.auth.username;
             const lastActive = user.activity.active;
-            const elapsedTime = Date.now() - lastActive;
+            const elapsedTime = lastActive == 0 ? 0 : Date.now() - lastActive;
             if(elapsedTime < 7 * 24 * 60 * 60 * 60 * 1000)
             {
                 messageWithActivityStatus.userStatuses.push({ username, elapsedTime });
