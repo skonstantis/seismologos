@@ -52,11 +52,13 @@ dbConnect(async (err, database) => {
         }
       });
 
-      cron.schedule('* * * * *', () => {
-        broadcastActivity(logger, db, activeUsers, activeVisitors);
-    }, {
-        scheduled: true
-    });
+      cron.schedule('* * * * *', async () => {
+          await broadcastActivity(logger, db, activeUsers, activeVisitors);
+          logger.info('run');
+      }, {
+          scheduled: true
+      });
+
     } catch (error) {
       logger.error("Failed to initialize loggedInUsers", error);
       process.exit(1);
