@@ -13,7 +13,10 @@ const broadcastActivity = async (logger, db, activeUsers, activeVisitors) => {
             const username = user.auth.username;
             const lastActive = user.activity.active;
             const elapsedTime = Date.now() - lastActive;
-            messageWithActivityStatus.userStatuses.push({ username, elapsedTime });
+            if(elapsedTime < 7 * 24 * 60 * 60 * 60 * 1000)
+            {
+                messageWithActivityStatus.userStatuses.push({ username, elapsedTime });
+            }
         }
     } catch (error) {
         logger.error("Error fetching users from database:", error);
