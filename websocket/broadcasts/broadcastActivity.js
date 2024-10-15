@@ -1,4 +1,4 @@
-exports.broadcastActivity = async (logger, db, activeVisitors) => {
+exports.broadcastActivity = async (logger, db, activeUsers, activeVisitors) => {
     const messageWithActivityStatus = {
         userStatuses: []
     };
