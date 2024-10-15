@@ -12,6 +12,7 @@ const WebSocket = require("ws");
 const websocketRouter = require('./websocket');
 const { buildQuery } = require("./helpers/buildQuery");
 const { statsFields } = require("./utils/statsFields");
+const { broadcastActivity } = require("./websocket/broadcasts/broadcastActivity");
 
 const port = process.env.PORT || 3000;
 const server = express();
@@ -21,6 +22,9 @@ server.set("trust proxy", 1);
 server.use(helmet());
 server.use(express.json());
 server.use(limiter);
+
+const activeUsers = new Map();
+const activeVisitors = new Map();
 
 dbConnect(async (err, database) => {
   if (!err) {
@@ -37,7 +41,7 @@ dbConnect(async (err, database) => {
       const wsServer = new WebSocket.Server({ server: httpServer });
 
       wsServer.on("connection", (ws, req) => {
-        websocketRouter(ws, req, server.locals.db, logger);
+        websocketRouter(ws, req, server.locals.db, logger, activeUsers, activeVisitors);
       });
 
       cron.schedule("* * * * *", async () => {
@@ -47,6 +51,12 @@ dbConnect(async (err, database) => {
           logger.error("Error deleting expired users:", error);
         }
       });
+
+      cron.schedule('* * * * *', () => {
+        broadcastActivity(logger, db, activeUsers, activeVisitors);
+    }, {
+        scheduled: true
+    });
     } catch (error) {
       logger.error("Failed to initialize loggedInUsers", error);
       process.exit(1);
