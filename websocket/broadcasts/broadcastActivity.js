@@ -14,6 +14,8 @@ exports.broadcastActivity = (logger, activeUsers, activeVisitors) => {
 
     const messageString = JSON.stringify(messageWithActivityStatus);
 
+    console.log(messageString);
+
     for (const [username, { ws }] of activeUsers) {
         if (ws && typeof ws.send === 'function') {
             ws.send(messageString);
@@ -22,7 +24,7 @@ exports.broadcastActivity = (logger, activeUsers, activeVisitors) => {
         }
     }
 
-    for (const [visitorId, ws] of activeVisitors) {
+    for (const [visitorId, { ws }] of activeVisitors) {
         if (ws && typeof ws.send === 'function') {
             ws.send(messageString);
         } else {
