@@ -53,6 +53,7 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
 
             const updatedStats = await db.collection("stats").findOne({});
             broadcastStats(updatedStats, logger, activeUsers, activeVisitors);
+            broadcastActivity(logger, db, activeUsers, activeVisitors);
         });
 
         ws.on("error", (error) => {
