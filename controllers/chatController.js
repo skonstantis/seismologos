@@ -7,14 +7,20 @@ const createMessage = async (req, res) => {
   const { token, id, username, message } = req.body;
   const errors = req.validationErrors || [];
 
+  logger.error(token, id, username, message);
   try {
     if (errors.length > 0) {
       return res.status(400).json({ errors });
     }
 
+    
+  logger.error(token, id, username, message);
     if (!token || !id || !username || !message) {
       return res.status(400).json({ errors: [{ msg: "Μή έγκυρο αίτημα" }] });
     }
+
+    
+  logger.error(token, id, username, message);
 
     const user = await db
       .collection("users")
@@ -42,11 +48,11 @@ const createMessage = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: "Token not found" }] });
     }
 
-    const message = {
+    const insertedMessage = {
         ...messageFields.$set,
       };
       
-      const result = await db.collection('messages').insertOne(message);
+      const result = await db.collection('messages').insertOne(insertedMessage);
   
       await db.collection('messages').updateOne(
         { _id: result.insertedId },
