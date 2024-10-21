@@ -1,6 +1,6 @@
 const { ObjectId } = require("mongodb");
 const { logger } = require("../config/logger");
-const { messageFields } = require("../utils/messageFieds");
+const { messageFields } = require("../utils/messageFields");
 
 const createMessage = async (req, res) => {
   const db = req.app.locals.db;
