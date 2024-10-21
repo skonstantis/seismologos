@@ -1,6 +1,6 @@
 const messageFields = {
     $set: {
-      user: null, 
+      user: "", 
       message: "",
       created: Date.now(),
       edited: [],

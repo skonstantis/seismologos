@@ -41,14 +41,14 @@ const createMessage = async (req, res) => {
     //   ...messageFields.$set,
     // };
 
-    const result = await db.collection("messages").insertOne({
-        $set: {
-          user: id,
-          message: message,
-        },
-      });
+    // const result = await db.collection("messages").insertOne({
+    //     $set: {
+    //       user: id,
+    //       message: message,
+    //     },
+    //   });
 
-    logger.info(result);
+    // logger.info(result);
 
     /*await db.collection("messages").updateOne(
       { _id: result.insertedId },
@@ -60,9 +60,9 @@ const createMessage = async (req, res) => {
       }
     );*/
 
-    logger.info(
-      `token ${token} id ${id} username ${username} message ${message}`
-    );
+    // logger.info(
+    //   `token ${token} id ${id} username ${username} message ${message}`
+    // );
     res.status(200).json({ msg: "Successfully created message" });
   } catch (err) {
     console.error("DATABASE ERROR:", err);
