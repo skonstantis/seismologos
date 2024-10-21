@@ -47,7 +47,7 @@ const createMessage = async (req, res) => {
         { _id: result.insertedId },
         {
           $set: {
-            'user': id,
+            'user': new ObjectId(id),
             'message': message,
           }
         }
