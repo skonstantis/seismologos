@@ -38,27 +38,26 @@ const createMessage = async (req, res) => {
     }
 
     const insertedMessage = {
-        ...messageFields.$set,
-      };
-      
-  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
-      
-      const result = await db.collection('messages').insertOne(insertedMessage);
-  
-      
-  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
-      await db.collection('messages').updateOne(
-        { _id: result.insertedId },
-        {
-          $set: {
-            'user': id,
-            'message': message,
-          }
-        }
-      );
+      ...messageFields.$set,
+    };
 
-      
-  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
+    const result = await db.collection("messages").insertOne(insertedMessage);
+
+    logger.info(result, result.insertedId);
+    
+    await db.collection("messages").updateOne(
+      { _id: result.insertedId },
+      {
+        $set: {
+          user: id,
+          message: message,
+        },
+      }
+    );
+
+    logger.info(
+      `token ${token} id ${id} username ${username} message ${message}`
+    );
     res.status(200).json({ msg: "Successfully created message" });
   } catch (err) {
     console.error("DATABASE ERROR:", err);
