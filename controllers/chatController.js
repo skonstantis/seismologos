@@ -20,7 +20,7 @@ const createMessage = async (req, res) => {
       .collection("users")
       .findOne({ _id: new ObjectId(id) });
 
-    if (!user) {
+    if (!user) {      
       user = await db
         .collection("users")
         .findOne({ "auth.username": username });
@@ -37,32 +37,22 @@ const createMessage = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: "Token not found" }] });
     }
 
-    // const insertedMessage = {
-    //   ...messageFields.$set,
-    // };
+    const insertedMessage = {
+        ...messageFields.$set,
+      };
+      
+      const result = await db.collection('messages').insertOne(insertedMessage);
+  
+      await db.collection('messages').updateOne(
+        { _id: result.insertedId },
+        {
+          $set: {
+            'user': id,
+            'message': message,
+          }
+        }
+      );
 
-    // const result = await db.collection("messages").insertOne({
-    //     $set: {
-    //       user: id,
-    //       message: message,
-    //     },
-    //   });
-
-    // logger.info(result);
-
-    /*await db.collection("messages").updateOne(
-      { _id: result.insertedId },
-      {
-        $set: {
-          user: id,
-          message: message,
-        },
-      }
-    );*/
-
-    // logger.info(
-    //   `token ${token} id ${id} username ${username} message ${message}`
-    // );
     res.status(200).json({ msg: "Successfully created message" });
   } catch (err) {
     console.error("DATABASE ERROR:", err);
