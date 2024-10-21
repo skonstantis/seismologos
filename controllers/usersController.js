@@ -212,7 +212,6 @@ const logoutUser = async (req, res) => {
     );
 
     res.status(200).json({ msg: "Successfully logged out" });
-
   } catch (err) {
     console.error("DATABASE ERROR:", err);
     res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not update document" }] });
