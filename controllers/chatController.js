@@ -7,20 +7,21 @@ const createMessage = async (req, res) => {
   const { token, id, username, message } = req.body;
   const errors = req.validationErrors || [];
 
-  logger.error(token, id, username, message);
+  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
+
   try {
     if (errors.length > 0) {
       return res.status(400).json({ errors });
     }
 
     
-  logger.error(token, id, username, message);
+  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
     if (!token || !id || !username || !message) {
       return res.status(400).json({ errors: [{ msg: "Μή έγκυρο αίτημα" }] });
     }
 
     
-  logger.error(token, id, username, message);
+  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
 
     const user = await db
       .collection("users")
