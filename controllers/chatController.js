@@ -43,9 +43,9 @@ const createMessage = async (req, res) => {
 
     const result = await db.collection("messages").insertOne(insertedMessage);
 
-    logger.info(result, result.insertedId);
-    
-    await db.collection("messages").updateOne(
+    logger.info(result);
+
+    /*await db.collection("messages").updateOne(
       { _id: result.insertedId },
       {
         $set: {
@@ -53,7 +53,7 @@ const createMessage = async (req, res) => {
           message: message,
         },
       }
-    );
+    );*/
 
     logger.info(
       `token ${token} id ${id} username ${username} message ${message}`
