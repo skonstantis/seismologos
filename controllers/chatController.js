@@ -7,32 +7,23 @@ const createMessage = async (req, res) => {
   const { token, id, username, message } = req.body;
   const errors = req.validationErrors || [];
 
-  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
-
   try {
     if (errors.length > 0) {
       return res.status(400).json({ errors });
     }
 
-    
-  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
     if (!token || !id || !username || !message) {
       return res.status(400).json({ errors: [{ msg: "Μή έγκυρο αίτημα" }] });
     }
-
-    
-  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
 
     const user = await db
       .collection("users")
       .findOne({ _id: new ObjectId(id) });
 
+      
+  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
+
     if (!user) {
-      if (!username) {
-        return res
-          .status(400)
-          .json({ errors: [{ msg: "Username is missing" }] });
-      }
       user = await db
         .collection("users")
         .findOne({ "auth.username": username });
@@ -44,10 +35,14 @@ const createMessage = async (req, res) => {
         }
       }
     }
+    
+  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
 
     if (!user.login.tokens || !user.login.tokens.includes(token)) {
       return res.status(400).json({ errors: [{ msg: "Token not found" }] });
     }
+    
+  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
 
     const insertedMessage = {
         ...messageFields.$set,
