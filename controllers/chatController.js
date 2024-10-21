@@ -20,9 +20,6 @@ const createMessage = async (req, res) => {
       .collection("users")
       .findOne({ _id: new ObjectId(id) });
 
-      
-  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
-
     if (!user) {
       user = await db
         .collection("users")
@@ -35,21 +32,21 @@ const createMessage = async (req, res) => {
         }
       }
     }
-    
-  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
 
     if (!user.login.tokens || !user.login.tokens.includes(token)) {
       return res.status(400).json({ errors: [{ msg: "Token not found" }] });
     }
-    
-  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
 
     const insertedMessage = {
         ...messageFields.$set,
       };
       
+  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
+      
       const result = await db.collection('messages').insertOne(insertedMessage);
   
+      
+  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
       await db.collection('messages').updateOne(
         { _id: result.insertedId },
         {
@@ -60,6 +57,8 @@ const createMessage = async (req, res) => {
         }
       );
 
+      
+  logger.info(`token ${token} id ${id} username ${username} message ${message}`);
     res.status(200).json({ msg: "Successfully created message" });
   } catch (err) {
     console.error("DATABASE ERROR:", err);
