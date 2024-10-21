@@ -37,11 +37,16 @@ const createMessage = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: "Token not found" }] });
     }
 
-    const insertedMessage = {
-      ...messageFields.$set,
-    };
+    // const insertedMessage = {
+    //   ...messageFields.$set,
+    // };
 
-    const result = await db.collection("messages").insertOne(insertedMessage);
+    const result = await db.collection("messages").insertOne({
+        $set: {
+          user: id,
+          message: message,
+        },
+      });
 
     logger.info(result);
 
