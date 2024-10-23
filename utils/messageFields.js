@@ -4,6 +4,7 @@ const messageFields = {
       message: "",
       created: "",
       edited: [],
+      id: ""
     },
   };
   

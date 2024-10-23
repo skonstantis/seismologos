@@ -17,7 +17,7 @@ const createMessage = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: "Μή έγκυρο αίτημα" }] });
     }
 
-    const user = await db
+    let user = await db
       .collection("users")
       .findOne({ _id: new ObjectId(id) });
 
@@ -38,27 +38,23 @@ const createMessage = async (req, res) => {
       return res.status(400).json({ errors: [{ msg: "Token not found" }] });
     }
 
-    const insertedMessage = {
-        ...messageFields.$set,
-      };
-      
-      const now = Date.now();
-      const result = await db.collection('messages').insertOne(insertedMessage);
-  
-      await db.collection('messages').updateOne(
-        { _id: result.insertedId },
-        {
-          $set: {
-            'user': new ObjectId(id),
-            'message': message,
-            'created': now
-          }
-        }
-      );
+    const messageCount = await db.collection('messages').countDocuments();
+    const newMessageId = messageCount + 1;
 
-      broadcastNewChatMessage({ time: now, user: username, message: message }, logger, req.app.locals.activeUsers, req.app.locals.activeVisitors);
+    const now = Date.now();
+    const newMessage = {
+      id: newMessageId,
+      user: new ObjectId(id),
+      message: message,
+      created: now,
+      edited: []
+    };
 
-    res.status(200).json({ msg: "Successfully created message" });
+    const result = await db.collection('messages').insertOne(newMessage);
+
+    broadcastNewChatMessage({ time: now, user: username, message: message, messageId: newMessageId }, logger, req.app.locals.activeUsers, req.app.locals.activeVisitors);
+
+    res.status(200).json({ msg: "Successfully created message", messageId: newMessageId });
   } catch (err) {
     console.error("DATABASE ERROR:", err);
     res
