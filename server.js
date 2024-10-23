@@ -21,8 +21,8 @@ server.use(helmet());
 server.use(express.json());
 server.use(limiter);
 
-const activeUsers = new Array();
-const activeVisitors = new Array();
+const activeUsers = new Map();
+const activeVisitors = new Map();
 
 server.locals.activeUsers = activeUsers;
 server.locals.activeVisitors = activeVisitors;
