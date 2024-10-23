@@ -64,7 +64,7 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
                 );
 
                 const updatedStats = await db.collection("stats").findOne({});
-                broadcastStats(updatedStats, logger, activeUsers, activeVisitors);
+                broadcastStats(updatedStats, logger, activeVisitors, activeUsers);
                 broadcastActivity(logger, db, activeUsers, activeVisitors);
             }
         });
