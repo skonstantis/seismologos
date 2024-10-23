@@ -23,7 +23,11 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
             return;
         }
 
-        activeUsers.set(username, { ws, lastActive: Date.now() });
+        if (!activeUsers.has(username)) {
+            activeUsers.set(username, []);
+        }
+
+        activeUsers.get(username).push({ ws, lastActive: Date.now() });
 
         await db.collection("stats").updateOne({}, { $set: { 'active.users': activeUsers.size } });
 
@@ -42,23 +46,41 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
 
         ws.on("close", async () => {
             const lastActiveTime = new Date().getTime();
-            activeUsers.delete(username);
+            const userConnections = activeUsers.get(username);
+            const index = userConnections.findIndex(connection => connection.ws === ws);
+            
+            if (index !== -1) {
+                userConnections.splice(index, 1);
 
-            await db.collection("stats").updateOne({}, { $set: { 'active.users': activeUsers.size } });
+                if (userConnections.length === 0) {
+                    activeUsers.delete(username);
+                }
 
-            await db.collection("users").updateOne(
-                { 'auth.username': username },
-                { $set: { 'activity.active': lastActiveTime } }
-            );
+                await db.collection("stats").updateOne({}, { $set: { 'active.users': activeUsers.size } });
 
-            const updatedStats = await db.collection("stats").findOne({});
-            broadcastStats(updatedStats, logger, activeUsers, activeVisitors);
-            broadcastActivity(logger, db, activeUsers, activeVisitors);
+                await db.collection("users").updateOne(
+                    { 'auth.username': username },
+                    { $set: { 'activity.active': lastActiveTime } }
+                );
+
+                const updatedStats = await db.collection("stats").findOne({});
+                broadcastStats(updatedStats, logger, activeUsers, activeVisitors);
+                broadcastActivity(logger, db, activeUsers, activeVisitors);
+            }
         });
 
         ws.on("error", (error) => {
             logger.error(`WebSocket error for ${username}:`, error);
-            activeUsers.delete(username);
+            const userConnections = activeUsers.get(username);
+            const index = userConnections.findIndex(connection => connection.ws === ws);
+            
+            if (index !== -1) {
+                userConnections.splice(index, 1);
+
+                if (userConnections.length === 0) {
+                    activeUsers.delete(username);
+                }
+            }
         });
     } catch (error) {
         logger.error("WebSocket authentication error:", error);
