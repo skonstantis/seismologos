@@ -56,7 +56,7 @@ const createMessage = async (req, res) => {
         }
       );
 
-      broadcastNewChatMessage({ time: now, user: username, message: message }, logger)
+      broadcastNewChatMessage({ time: now, user: username, message: message }, logger, req.app.locals.activeUsers, req.app.locals.activeVisitors);
 
     res.status(200).json({ msg: "Successfully created message" });
   } catch (err) {

@@ -1,6 +1,4 @@
-const { activeUsers, activeVisitors } = require('../../server');
-
-const broadcastNewChatMessage = (message, logger) => {
+const broadcastNewChatMessage = (message, logger, activeUsers, activeVisitors) => {
     const messageString = JSON.stringify(message); 
     for (const [username, { ws }] of activeUsers) {
         if (ws && typeof ws.send === 'function') {

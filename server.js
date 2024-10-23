@@ -8,7 +8,6 @@ const routes = require("./routes");
 const shutdown = require("./controllers/shutdown");
 const cron = require("node-cron");
 const { handleUnverifiedUsers } = require("./controllers/unverifiedUsersController");
-const { setupWebSocket } = require("./websocketSetup");
 const { buildQuery } = require("./helpers/buildQuery");
 const { statsFields } = require("./utils/statsFields");
 const { broadcastActivity } = require("./websocket/broadcasts/broadcastActivity");
@@ -25,6 +24,9 @@ server.use(limiter);
 const activeUsers = new Map();
 const activeVisitors = new Map();
 
+server.locals.activeUsers = activeUsers;
+server.locals.activeVisitors = activeVisitors;
+
 dbConnect(async (err, database) => {
   if (!err) {
     server.locals.db = database;
@@ -37,7 +39,7 @@ dbConnect(async (err, database) => {
         logger.info(`Server listening on port ${port}`);
       });
 
-      setupWebSocket(httpServer, server.locals.db, logger, activeUsers, activeVisitors);
+      require('./websocketSetup')(httpServer, server.locals.db, logger, activeUsers, activeVisitors);
 
       cron.schedule("* * * * *", async () => {
         try {
@@ -72,8 +74,4 @@ server.use("/", routes);
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
-module.exports = {
-  server,
-  activeUsers,
-  activeVisitors
-};
+module.exports = server; 
