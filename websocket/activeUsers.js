@@ -54,18 +54,18 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
 
                 if (userConnections.length === 0) {
                     activeUsers.delete(username);
+
+                    await db.collection("stats").updateOne({}, { $set: { 'active.users': activeUsers.size } });
+
+                    await db.collection("users").updateOne(
+                        { 'auth.username': username },
+                        { $set: { 'activity.active': lastActiveTime } }
+                    );
+
+                    const updatedStats = await db.collection("stats").findOne({});
+                    broadcastStats(updatedStats, logger, activeVisitors, activeUsers);
+                    broadcastActivity(logger, db, activeUsers, activeVisitors);
                 }
-
-                await db.collection("stats").updateOne({}, { $set: { 'active.users': activeUsers.size } });
-
-                await db.collection("users").updateOne(
-                    { 'auth.username': username },
-                    { $set: { 'activity.active': lastActiveTime } }
-                );
-
-                const updatedStats = await db.collection("stats").findOne({});
-                broadcastStats(updatedStats, logger, activeVisitors, activeUsers);
-                broadcastActivity(logger, db, activeUsers, activeVisitors);
             }
         });
 
