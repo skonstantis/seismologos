@@ -77,4 +77,8 @@ server.use("/", routes);
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
-module.exports = server;
+module.exports = {
+  server,
+  activeUsers,
+  activeVisitors
+};

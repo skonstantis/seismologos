@@ -1,6 +1,7 @@
 const { ObjectId } = require("mongodb");
 const { logger } = require("../config/logger");
 const { messageFields } = require("../utils/messageFields");
+const { broadcastNewChatMessage } = require("../websocket/broadcasts/broadcastNewChatMessage");
 
 const createMessage = async (req, res) => {
   const db = req.app.locals.db;
@@ -41,6 +42,7 @@ const createMessage = async (req, res) => {
         ...messageFields.$set,
       };
       
+      const now = Date.now();
       const result = await db.collection('messages').insertOne(insertedMessage);
   
       await db.collection('messages').updateOne(
@@ -49,9 +51,12 @@ const createMessage = async (req, res) => {
           $set: {
             'user': new ObjectId(id),
             'message': message,
+            'created': now
           }
         }
       );
+
+      broadcastNewChatMessage({ time: now, user: username, message: message }, logger)
 
     res.status(200).json({ msg: "Successfully created message" });
   } catch (err) {

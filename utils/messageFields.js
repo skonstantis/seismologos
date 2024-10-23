@@ -2,7 +2,7 @@ const messageFields = {
     $set: {
       user: "", 
       message: "",
-      created: Date.now(),
+      created: "",
       edited: [],
     },
   };
