@@ -8,8 +8,7 @@ const routes = require("./routes");
 const shutdown = require("./controllers/shutdown");
 const cron = require("node-cron");
 const { handleUnverifiedUsers } = require("./controllers/unverifiedUsersController");
-const WebSocket = require("ws");
-const websocketRouter = require('./websocket');
+const { setupWebSocket } = require("./websocketSetup");
 const { buildQuery } = require("./helpers/buildQuery");
 const { statsFields } = require("./utils/statsFields");
 const { broadcastActivity } = require("./websocket/broadcasts/broadcastActivity");
@@ -38,11 +37,7 @@ dbConnect(async (err, database) => {
         logger.info(`Server listening on port ${port}`);
       });
 
-      const wsServer = new WebSocket.Server({ server: httpServer });
-
-      wsServer.on("connection", (ws, req) => {
-        websocketRouter(ws, req, server.locals.db, logger, activeUsers, activeVisitors);
-      });
+      setupWebSocket(httpServer, server.locals.db, logger, activeUsers, activeVisitors);
 
       cron.schedule("* * * * *", async () => {
         try {
