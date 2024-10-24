@@ -3,6 +3,12 @@ const { logger } = require("../config/logger");
 const { messageFields } = require("../utils/messageFields");
 const { broadcastNewChatMessage } = require("../websocket/broadcasts/broadcastNewChatMessage");
 
+const getLastMessage = async (req, res) => {
+  const db = req.app.locals.db;
+  const messageCount = await db.collection('messages').countDocuments();
+  res.status(200).json(messageCount);
+};
+
 const createMessage = async (req, res) => {
   const db = req.app.locals.db;
   const { token, id, username, message } = req.body;
@@ -65,4 +71,5 @@ const createMessage = async (req, res) => {
 
 module.exports = {
   createMessage,
+  getLastMessage
 };

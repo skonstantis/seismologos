@@ -15,4 +15,9 @@ router.post(
   chatController.createMessage,
 );
 
+router.get(
+  "/last",
+  chatController.getLastMessage,
+);
+
 module.exports = router;
