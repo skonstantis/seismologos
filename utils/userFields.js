@@ -19,10 +19,6 @@ const verifiedFields = {
     ids: {
         old: []
     },
-    chat:
-    {
-      lastSeenMessage: 0,
-    }
   },
   $unset: {
     unverified: "",

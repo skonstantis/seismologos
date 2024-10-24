@@ -132,7 +132,7 @@ const validateSession = async (req, res) => {
       }
     );
 
-    res.json({ token: newToken, msg: "Session extended", user: { id: user._id, username: user.auth.username, email: user.auth.email, lastLogin: user.login.last, lastSeenMessage: user.chat.lastSeenMessage } });
+    res.json({ token: newToken, msg: "Session extended", user: { id: user._id, username: user.auth.username, email: user.auth.email, lastLogin: user.login.last } });
   } catch (err) {
     logger.error("DATABASE ERROR:", err);
     res.status(500).json({ errors: [{ msg: "DATABASE ERROR: Could not access document" }] });
