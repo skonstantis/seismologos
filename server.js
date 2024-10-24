@@ -10,7 +10,6 @@ const cron = require("node-cron");
 const { handleUnverifiedUsers } = require("./controllers/unverifiedUsersController");
 const { buildQuery } = require("./helpers/buildQuery");
 const { statsFields } = require("./utils/statsFields");
-const { broadcastActivity } = require("./websocket/broadcasts/broadcastActivity");
 
 const port = process.env.PORT || 3000;
 const server = express();
@@ -47,16 +46,6 @@ dbConnect(async (err, database) => {
         } catch (error) {
           logger.error("Error deleting expired users:", error);
         }
-      });
-
-      cron.schedule('* * * * *', async () => {
-        try {
-          await broadcastActivity(logger, server.locals.db, activeUsers, activeVisitors);
-        } catch (error) {
-          logger.error("Error broadcasting activity:", error);
-        }
-      }, {
-          scheduled: true
       });
 
     } catch (error) {
