@@ -15,7 +15,7 @@ const broadcastActivity = async (logger, db, activeUsers, activeVisitors) => {
             const elapsedTime = lastActive == 0 ? 0 : Date.now() - lastActive;
             if(elapsedTime < 7 * 24 * 60 * 60 * 60 * 1000)
             {
-                messageWithActivityStatus.userStatuses.push({ username, elapsedTime });
+                messageWithActivityStatus.userStatuses.push({ username, lastActive });
             }
         }
     } catch (error) {
