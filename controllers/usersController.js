@@ -174,7 +174,7 @@ const loginUser = async (req, res) => {
 
 const logoutUser = async (req, res) => {
   const db = req.app.locals.db;
-  const { id, username, token } = req.body || {};
+  const { id, username, token, lastSeenMessage } = req.body || {};
 
   try {
     if (!token) {
@@ -208,7 +208,10 @@ const logoutUser = async (req, res) => {
 
     await db.collection('users').updateOne(
       { _id: new ObjectId(id) },
-      { $pull: { 'login.tokens': token } }
+      { 
+        $pull: { 'login.tokens': token },
+        $push: { 'chat.lastSeenMessage': lastSeenMessage } 
+      }
     );
 
     res.status(200).json({ msg: "Successfully logged out" });
