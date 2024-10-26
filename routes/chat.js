@@ -17,7 +17,22 @@ router.post(
 
 router.get(
   "/last",
-  chatController.getLastMessage,
+  chatController.getLastMessageId,
+);
+
+router.get(
+  "/last",
+  chatController.getLastMessageId,
+);
+
+router.get(
+  "message/:id",
+  chatController.getMessage,
+);
+
+router.get(
+  "/messages/:from/:to",
+  chatController.getMessagesBetween
 );
 
 module.exports = router;

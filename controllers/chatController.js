@@ -3,7 +3,7 @@ const { logger } = require("../config/logger");
 const { messageFields } = require("../utils/messageFields");
 const { broadcastNewChatMessage } = require("../websocket/broadcasts/broadcastNewChatMessage");
 
-const getLastMessage = async (req, res) => {
+const getLastMessageId = async (req, res) => {
   const db = req.app.locals.db;
   const messageCount = await db.collection('messages').countDocuments();
   res.status(200).json(messageCount);
@@ -20,7 +20,7 @@ const createMessage = async (req, res) => {
     }
 
     if (!token || !id || !username || !message) {
-      return res.status(400).json({ errors: [{ msg: "Μή έγκυρο αίτημα" }] });
+      return res.status(400).json({ errors: [{ msg: "Invalid request" }] });
     }
 
     let user = await db
@@ -69,7 +69,63 @@ const createMessage = async (req, res) => {
   }
 };
 
+const getMessage = async (req, res) => {
+  const db = req.app.locals.db;
+  const id = parseInt(req.query.id) || null;
+
+  try {
+    if (isNaN(id)) {
+      return res.status(400).json({ errors: [{ msg: "Invalid request" }] });
+    }
+
+    let message = await db
+      .collection("messages")
+      .findOne({ id: id });
+
+    if (!message) {
+      return res.status(400).json({ errors: [{ msg: "Message not found" }] });
+    }
+
+    res.status(200).json({ message: message });
+  } catch (err) {
+    console.error("DATABASE ERROR:", err);
+    res
+      .status(500)
+      .json({ errors: [{ msg: "DATABASE ERROR: Could not create document" }] });
+  }
+};
+
+const getMessagesBetween = async (req, res) => {
+  const db = req.app.locals.db;
+  const from = parseInt(req.query.from);
+  const to = parseInt(req.query.to);
+
+  try {
+    if (isNaN(from) || isNaN(to)) {
+      return res.status(400).json({ errors: [{ msg: "Invalid request" }] });
+    }
+
+    const messages = await db
+      .collection("messages")
+      .find({ id: { $gte: from, $lte: to } })
+      .toArray();
+
+    if (messages.length === 0) {
+      return res.status(404).json({ errors: [{ msg: "No messages found in the specified range" }] });
+    }
+
+    res.status(200).json({ messages });
+  } catch (err) {
+    console.error("DATABASE ERROR:", err);
+    res
+      .status(500)
+      .json({ errors: [{ msg: "DATABASE ERROR: Could not retrieve documents" }] });
+  }
+};
+
 module.exports = {
   createMessage,
-  getLastMessage
+  getLastMessageId,
+  getMessage,
+  getMessagesBetween
 };
