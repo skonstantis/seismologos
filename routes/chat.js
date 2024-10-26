@@ -26,12 +26,12 @@ router.get(
 );
 
 router.get(
-  "message/:id",
+  "/message",
   chatController.getMessage,
 );
 
 router.get(
-  "/messages/:from/:to",
+  "/messages",
   chatController.getMessagesBetween
 );
 
