@@ -59,7 +59,7 @@ const createMessage = async (req, res) => {
 
     const result = await db.collection('messages').insertOne(newMessage);
 
-    broadcastNewChatMessage({ created: now, username: username, message: message, id: newMessageId }, logger, req.app.locals.activeUsers, req.app.locals.activeVisitors);
+    broadcastNewChatMessage({ created: now, user: username, message: message, id: newMessageId }, logger, req.app.locals.activeUsers, req.app.locals.activeVisitors);
 
     res.status(200).json({ msg: "Successfully created message", messageId: newMessageId });
   } catch (err) {

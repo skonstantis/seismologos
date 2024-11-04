@@ -22,9 +22,11 @@ server.use(limiter);
 
 const activeUsers = new Map();
 const activeVisitors = new Map();
+const activeSensors = new Map();
 
 server.locals.activeUsers = activeUsers;
 server.locals.activeVisitors = activeVisitors;
+server.locals.activeSensors = activeSensors;
 
 dbConnect(async (err, database) => {
   if (!err) {
@@ -38,7 +40,7 @@ dbConnect(async (err, database) => {
         logger.info(`Server listening on port ${port}`);
       });
 
-      require('./websocketSetup')(httpServer, server.locals.db, logger, activeUsers, activeVisitors);
+      require('./websocketSetup')(httpServer, server.locals.db, logger, activeUsers, activeVisitors, activeSensors);
 
       cron.schedule("* * * * *", async () => {
         try {

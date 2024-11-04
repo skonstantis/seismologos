@@ -1,8 +1,9 @@
 const activeUsersHandler = require('./activeUsers');
 const activeVisitorsHandler = require('./activeVisitors');
+const activeSensorsHandler = require('./activeSensors');
 const { v4: uuidv4 } = require('uuid');
 
-module.exports = (ws, req, db, logger, activeUsers, activeVisitors) => {
+module.exports = (ws, req, db, logger, activeUsers, activeVisitors, activeSensors) => {
     const pathSegments = req.url.split('/');
     const basePath = pathSegments[pathSegments.length - 2];
 
@@ -13,6 +14,9 @@ module.exports = (ws, req, db, logger, activeUsers, activeVisitors) => {
         case 'activeVisitors':
             const visitorId = uuidv4();
             activeVisitorsHandler(activeVisitors, activeUsers, ws, req, db, logger, visitorId);
+            break;
+        case 'activeSensors':
+            activeSensorsHandler(activeVisitors, activeUsers, activeSensors, ws, req, db, logger, visitorId);
             break;
         default:
             logger.warn(`Unknown WebSocket path: ${req.url}`);
