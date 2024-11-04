@@ -18,7 +18,6 @@ module.exports = (ws, req, db, logger, activeUsers, activeVisitors, activeSensor
                 activeVisitorsHandler(activeVisitors, activeUsers, ws, req, db, logger, visitorId);
                 break;
             case 'activeSensors':
-                logger.info(activeSensors);
                 activeSensorsHandler(activeVisitors, activeUsers, activeSensors, ws, req, db, logger);
                 break;
             default:
