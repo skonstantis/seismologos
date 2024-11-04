@@ -20,6 +20,8 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                     return;
                 }
 
+                logger.info(activeSensors);
+
                 if (!activeSensors.get(credentials.id)) {
                     activeSensors.set(credentials.id, { ws, lastActive: Date.now() });
                     await db.collection('stats').updateOne({}, { $set: { 'active.sensors': activeSensors.size } });
