@@ -3,6 +3,15 @@ const { broadcastNewSensorData } = require("./broadcasts/broadcastNewSensorData"
 
 module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db, logger) => {
     try {
+        async function validateCredentials(credentials, db) {
+            try {
+                return true; 
+            } catch (error) {
+                console.error('Error validating credentials:', error);
+                return false;
+            }
+        }
+
         ws.on('message', async (message) => {
             try {
                 const data = JSON.parse(message);
@@ -14,7 +23,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
 
                 const { credentials } = data;
                 const validCredentials = await validateCredentials(credentials, db);
-                
+
                 if (!validCredentials) {
                     ws.send(JSON.stringify({ error: 'Invalid credentials' }));
                     return;
@@ -23,7 +32,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                 if (!activeSensors.get(credentials.id)) {
                     activeSensors.set(credentials.id, { ws, lastActive: Date.now() });
                     await db.collection('stats').updateOne({}, { $set: { 'active.sensors': activeSensors.size } });
-                    
+
                     logger.info(`Sensor ${credentials.id} connected and validated`);
                     ws.send(JSON.stringify({ message: 'Credentials validated' }));
                 } else {
@@ -38,7 +47,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                 const { sensorData } = data;
                 await db.collection('sensors').insertOne(sensorData);
 
-                broadcastNewSensorData(sensorData, logger, activeUsers, activeVisitors);
+                broadcastNewSensorData(data, logger, activeUsers, activeVisitors);
 
                 logger.info('Sensor data received and broadcasted:', sensorData);
             } catch (error) {
@@ -65,20 +74,27 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
             db.collection("stats").updateOne({}, { $set: { 'active.sensors': activeSensors.size } });
         });
 
+        setInterval(() => {
+            const now = Date.now();
+            const idsToRemove = [];
+
+            activeSensors.forEach((sensor, id) => {
+                if (now - sensor.lastActive > 5000) { 
+                    sensor.ws.close();
+                    idsToRemove.push(id);
+                }
+            });
+
+            idsToRemove.forEach(id => {
+                activeSensors.delete(id);
+                db.collection("stats").updateOne({}, { $set: { 'active.sensors': activeSensors.size } });
+                const currentStats = db.collection("stats").findOne({});
+                broadcastStats(currentStats, logger, activeVisitors, activeUsers);
+            });
+        }, 1000);
+
     } catch (error) {
         logger.error("WebSocket error:", error);
         ws.close(4000, "Internal server error");
     }
 };
-
-async function validateCredentials(credentials, db) {
-    try {
-        // Perform actual validation logic here
-        // const user = await db.collection('users').findOne({ apiKey: credentials.apiKey });
-        // return !!user;
-        return true; // Replace this with actual validation logic
-    } catch (error) {
-        console.error('Error validating credentials:', error);
-        return false;
-    }
-}
