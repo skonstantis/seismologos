@@ -28,6 +28,8 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                     activeSensors.set(credentials.id, { ws, lastActive: Date.now() });
                     await db.collection('stats').updateOne({}, { $set: { 'active.sensors': activeSensors.size } });
                     ws.send(JSON.stringify({ message: 'Credentials validated' }));
+                    const currentStats = await db.collection("stats").findOne({});
+                    broadcastStats(currentStats, logger, activeVisitors, activeUsers);
                 } else {
                     activeSensors.get(credentials.id).lastActive = Date.now();
                 }
@@ -42,7 +44,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                 const { sensorData } = data;
                 await db.collection('sensors').insertOne(sensorData);
 
-                broadcastNewSensorData(data, logger, activeUsers, activeVisitors);
+                //broadcastNewSensorData(data, logger, activeUsers, activeVisitors);
             } catch (error) {
                 logger.error('Error handling sensor data:', error);
                 ws.send(JSON.stringify({ error: 'Error handling sensor data' }));
