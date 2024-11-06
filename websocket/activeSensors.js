@@ -27,14 +27,12 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                 if (!activeSensors.has(credentials.id)) {
                     activeSensors.set(credentials.id, { ws, lastActive: Date.now() });
                     await db.collection('stats').updateOne({}, { $set: { 'active.sensors': activeSensors.size } });
-                    
-                    logger.info(`Sensor ${credentials.id} connected and validated`);
                     ws.send(JSON.stringify({ message: 'Credentials validated' }));
                 } else {
                     activeSensors.get(credentials.id).lastActive = Date.now();
                 }
 
-                resetDisconnectTimeout(credentials.id, ws, sensorTimeouts,logger);
+                resetDisconnectTimeout(credentials.id, ws, sensorTimeouts);
 
                 if (!data.sensorData) {
                     ws.send(JSON.stringify({ error: 'Missing sensor data' }));
@@ -45,8 +43,6 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                 await db.collection('sensors').insertOne(sensorData);
 
                 broadcastNewSensorData(data, logger, activeUsers, activeVisitors);
-
-                logger.info('Sensor data received and broadcasted:', sensorData);
             } catch (error) {
                 logger.error('Error handling sensor data:', error);
                 ws.send(JSON.stringify({ error: 'Error handling sensor data' }));
@@ -54,6 +50,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
         });
 
         ws.on('close', async () => {
+            logger.info("i was called");
             handleSensorDisconnection(ws, activeSensors, db, logger, activeVisitors, activeUsers);
         });
 
@@ -80,15 +77,13 @@ async function validateCredentials(credentials, db) {
     }
 }
 
-function resetDisconnectTimeout(sensorId, ws, sensorTimeouts, logger) {
+function resetDisconnectTimeout(sensorId, ws, sensorTimeouts) {
     if (sensorTimeouts.has(sensorId)) {
         clearTimeout(sensorTimeouts.get(sensorId));
-        logger.info("cleared");
     }
 
     const timeout = setTimeout(() => {
         ws.close();
-        logger.info("Disconnected");
     }, disconnectTimeout);
 
     sensorTimeouts.set(sensorId, timeout);
