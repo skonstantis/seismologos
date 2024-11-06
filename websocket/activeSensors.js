@@ -1,8 +1,12 @@
 const { broadcastStats } = require("./broadcasts/broadcastStats");
 const { broadcastNewSensorData } = require("./broadcasts/broadcastNewSensorData");
 
+const disconnectTimeout = 5000; 
+
 module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db, logger) => {
     try {
+        const sensorTimeouts = new Map();
+
         ws.on('message', async (message) => {
             try {
                 const data = JSON.parse(message);
@@ -20,7 +24,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                     return;
                 }
 
-                if (!activeSensors.get(credentials.id)) {
+                if (!activeSensors.has(credentials.id)) {
                     activeSensors.set(credentials.id, { ws, lastActive: Date.now() });
                     await db.collection('stats').updateOne({}, { $set: { 'active.sensors': activeSensors.size } });
                     
@@ -29,6 +33,8 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                 } else {
                     activeSensors.get(credentials.id).lastActive = Date.now();
                 }
+
+                resetDisconnectTimeout(credentials.id, ws, sensorTimeouts,logger);
 
                 if (!data.sensorData) {
                     ws.send(JSON.stringify({ error: 'Missing sensor data' }));
@@ -48,21 +54,12 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
         });
 
         ws.on('close', async () => {
-            const idsToRemove = [...activeSensors.keys()].filter(id => activeSensors.get(id).ws === ws);
-            idsToRemove.forEach(id => activeSensors.delete(id));
-
-            await db.collection("stats").updateOne({}, { $set: { 'active.sensors': activeSensors.size } });
-
-            const currentStats = await db.collection("stats").findOne({});
-            broadcastStats(currentStats, logger, activeVisitors, activeUsers);
+            handleSensorDisconnection(ws, activeSensors, db, logger, activeVisitors, activeUsers);
         });
 
         ws.on('error', (error) => {
             logger.error(`WebSocket error for sensor:`, error);
-            const idsToRemove = [...activeSensors.keys()].filter(id => activeSensors.get(id).ws === ws);
-            idsToRemove.forEach(id => activeSensors.delete(id));
-
-            db.collection("stats").updateOne({}, { $set: { 'active.sensors': activeSensors.size } });
+            handleSensorDisconnection(ws, activeSensors, db, logger, activeVisitors, activeUsers);
         });
 
     } catch (error) {
@@ -81,4 +78,28 @@ async function validateCredentials(credentials, db) {
         console.error('Error validating credentials:', error);
         return false;
     }
+}
+
+function resetDisconnectTimeout(sensorId, ws, sensorTimeouts, logger) {
+    if (sensorTimeouts.has(sensorId)) {
+        clearTimeout(sensorTimeouts.get(sensorId));
+        logger.info("cleared");
+    }
+
+    const timeout = setTimeout(() => {
+        ws.close();
+        logger.info("Disconnected");
+    }, disconnectTimeout);
+
+    sensorTimeouts.set(sensorId, timeout);
+}
+
+async function handleSensorDisconnection(ws, activeSensors, db, logger, activeVisitors, activeUsers) {
+    const idsToRemove = [...activeSensors.keys()].filter(id => activeSensors.get(id).ws === ws);
+    idsToRemove.forEach(id => activeSensors.delete(id));
+
+    await db.collection("stats").updateOne({}, { $set: { 'active.sensors': activeSensors.size } });
+
+    const currentStats = await db.collection("stats").findOne({});
+    broadcastStats(currentStats, logger, activeVisitors, activeUsers);
 }
