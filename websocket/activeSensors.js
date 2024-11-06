@@ -44,7 +44,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                 const { sensorData } = data;
                 await db.collection('sensors').insertOne(sensorData);
 
-                //broadcastNewSensorData(data, logger, activeUsers, activeVisitors);
+                broadcastNewSensorData(data, logger, activeUsers, activeVisitors);
             } catch (error) {
                 logger.error('Error handling sensor data:', error);
                 ws.send(JSON.stringify({ error: 'Error handling sensor data' }));
@@ -52,7 +52,6 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
         });
 
         ws.on('close', async () => {
-            logger.info("i was called");
             handleSensorDisconnection(ws, activeSensors, db, logger, activeVisitors, activeUsers);
         });
 
