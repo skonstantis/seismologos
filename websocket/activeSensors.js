@@ -26,7 +26,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
 
                 const data = JSON.parse(message);
 
-                if (message === 'Pong') {
+                if (data.message === 'Pong') {
                     logger.info('Pong received from sensor');
                     lastMessageTime = Date.now(); // Update the last message time on pong
                     disconnected = false;
