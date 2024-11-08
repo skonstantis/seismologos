@@ -63,12 +63,12 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
         });
 
         ws.on('close', async () => {
-            clearInterval(pingSensor); // Clear the ping interval on close
+            clearInterval(pingSensor); 
             handleSensorDisconnection(ws, activeSensors, db, logger, activeVisitors, activeUsers);
         });
 
         ws.on('error', (error) => {
-            clearInterval(pingSensor); // Clear the ping interval on error
+            clearInterval(pingSensor); 
             logger.error(`WebSocket error for sensor:`, error);
             handleSensorDisconnection(ws, activeSensors, db, logger, activeVisitors, activeUsers);
         });
