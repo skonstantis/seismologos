@@ -8,7 +8,6 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
 
         const pingSensor = setInterval(() => {
             if (disconnected) {
-                logger.info('Sesnor disconnected');
                 clearInterval(pingSensor);
                 ws.close();
                 return;
