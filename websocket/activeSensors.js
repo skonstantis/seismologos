@@ -9,7 +9,6 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
         const pingSensor = setInterval(() => {
             if (Date.now() - lastMessageTime > pingInterval) {
                 ws.ping(); // Send ping
-                console.log('Ping sent to sensor');
             }
         }, pingInterval);
 
@@ -18,6 +17,11 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                 lastMessageTime = Date.now(); // Update the last message time
 
                 const data = JSON.parse(message);
+
+                if (message === 'Pong') {
+                    lastMessageTime = Date.now(); // Update the last message time on pong
+                    return;
+                }
 
                 if (!data.credentials) {
                     ws.send(JSON.stringify({ error: 'Missing credentials' }));
