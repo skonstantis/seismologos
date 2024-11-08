@@ -5,10 +5,18 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
     try {
         const pingInterval = 10000; // Ping every 10 seconds
         let lastMessageTime = Date.now();
+        let disconnected = false;
 
         const pingSensor = setInterval(() => {
+            if (disconnected) {
+                ws.close();
+                return;
+            }
+
             if (Date.now() - lastMessageTime > pingInterval) {
                 ws.ping(); // Send ping
+                logger.info('Ping sent to sensor');
+                disconnected = true;
             }
         }, pingInterval);
 
@@ -19,7 +27,9 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                 const data = JSON.parse(message);
 
                 if (message === 'Pong') {
+                    logger.info('Pong received from sensor');
                     lastMessageTime = Date.now(); // Update the last message time on pong
+                    disconnected = false;
                     return;
                 }
 
@@ -46,24 +56,16 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                     activeSensors.get(credentials.id).lastActive = Date.now();
                 }
 
-                if (!data.sensorData) {
-                    ws.send(JSON.stringify({ error: 'Missing sensor data' }));
-                    return;
+                if (data.sensorData) {
+                    const { sensorData } = data;
+                    await db.collection('sensors').insertOne(sensorData);
+
+                    broadcastNewSensorData(data, logger, activeUsers, activeVisitors);
                 }
-
-                const { sensorData } = data;
-                await db.collection('sensors').insertOne(sensorData);
-
-                broadcastNewSensorData(data, logger, activeUsers, activeVisitors);
             } catch (error) {
                 logger.error('Error handling sensor data:', error);
                 ws.send(JSON.stringify({ error: 'Error handling sensor data' }));
             }
-        });
-
-        ws.on('pong', () => {
-            console.log('Pong received from sensor');
-            lastMessageTime = Date.now(); // Update the last message time on pong
         });
 
         ws.on('close', async () => {
