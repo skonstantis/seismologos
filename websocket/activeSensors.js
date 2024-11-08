@@ -3,32 +3,25 @@ const { broadcastNewSensorData } = require("./broadcasts/broadcastNewSensorData"
 
 module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db, logger) => {
     try {
-        const pingInterval = 10000; // Ping every 10 seconds
-        let lastMessageTime = Date.now();
+        const pingInterval = 10000;
         let disconnected = false;
 
         const pingSensor = setInterval(() => {
             if (disconnected) {
+                logger.info('Sesnor disconnected');
                 ws.close();
                 return;
             }
 
-            if (Date.now() - lastMessageTime > pingInterval) {
-                ws.ping(); // Send ping
-                logger.info('Ping sent to sensor');
-                disconnected = true;
-            }
+            ws.ping();
+            disconnected = true;
         }, pingInterval);
 
         ws.on('message', async (message) => {
             try {
-                lastMessageTime = Date.now(); // Update the last message time
-
                 const data = JSON.parse(message);
 
                 if (data.message === 'Pong') {
-                    logger.info('Pong received from sensor');
-                    lastMessageTime = Date.now(); // Update the last message time on pong
                     disconnected = false;
                     return;
                 }
