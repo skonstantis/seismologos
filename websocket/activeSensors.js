@@ -1,12 +1,8 @@
 const { broadcastStats } = require("./broadcasts/broadcastStats");
 const { broadcastNewSensorData } = require("./broadcasts/broadcastNewSensorData");
 
-const disconnectTimeout = 5000; 
-
 module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db, logger) => {
     try {
-        const sensorTimeouts = new Map();
-
         ws.on('message', async (message) => {
             try {
                 const data = JSON.parse(message);
@@ -33,8 +29,6 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                 } else {
                     activeSensors.get(credentials.id).lastActive = Date.now();
                 }
-
-                resetDisconnectTimeout(credentials.id, ws, sensorTimeouts);
 
                 if (!data.sensorData) {
                     ws.send(JSON.stringify({ error: 'Missing sensor data' }));
@@ -76,18 +70,6 @@ async function validateCredentials(credentials, db) {
         console.error('Error validating credentials:', error);
         return false;
     }
-}
-
-function resetDisconnectTimeout(sensorId, ws, sensorTimeouts) {
-    if (sensorTimeouts.has(sensorId)) {
-        clearTimeout(sensorTimeouts.get(sensorId));
-    }
-
-    const timeout = setTimeout(() => {
-        ws.close();
-    }, disconnectTimeout);
-
-    sensorTimeouts.set(sensorId, timeout);
 }
 
 async function handleSensorDisconnection(ws, activeSensors, db, logger, activeVisitors, activeUsers) {
