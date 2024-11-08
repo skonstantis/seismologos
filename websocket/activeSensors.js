@@ -3,8 +3,20 @@ const { broadcastNewSensorData } = require("./broadcasts/broadcastNewSensorData"
 
 module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db, logger) => {
     try {
+        const pingInterval = 10000; // Ping every 10 seconds
+        let lastMessageTime = Date.now();
+
+        const pingSensor = setInterval(() => {
+            if (Date.now() - lastMessageTime > pingInterval) {
+                ws.ping(); // Send ping
+                console.log('Ping sent to sensor');
+            }
+        }, pingInterval);
+
         ws.on('message', async (message) => {
             try {
+                lastMessageTime = Date.now(); // Update the last message time
+
                 const data = JSON.parse(message);
 
                 if (!data.credentials) {
@@ -45,11 +57,18 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
             }
         });
 
+        ws.on('pong', () => {
+            console.log('Pong received from sensor');
+            lastMessageTime = Date.now(); // Update the last message time on pong
+        });
+
         ws.on('close', async () => {
+            clearInterval(pingSensor); // Clear the ping interval on close
             handleSensorDisconnection(ws, activeSensors, db, logger, activeVisitors, activeUsers);
         });
 
         ws.on('error', (error) => {
+            clearInterval(pingSensor); // Clear the ping interval on error
             logger.error(`WebSocket error for sensor:`, error);
             handleSensorDisconnection(ws, activeSensors, db, logger, activeVisitors, activeUsers);
         });
