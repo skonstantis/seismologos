@@ -39,6 +39,11 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                     return;
                 }
 
+                await db.collection('sensors').updateOne(
+                    { id: credentials.id },  
+                    { $set: { active: 0 } } 
+                );
+
                 if (!activeSensors.has(credentials.id)) {
                     activeSensors.set(credentials.id, { ws, lastActive: Date.now() });
                     await db.collection('stats').updateOne({}, { $set: { 'active.sensors': activeSensors.size } });
@@ -51,7 +56,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
 
                 if (data.sensorData) {
                     const { sensorData } = data;
-                    await db.collection('sensors').insertOne(sensorData);
+                    //await db.collection('sensors').insertOne(sensorData);
 
                     broadcastNewSensorData(data, logger, activeUsers, activeVisitors);
                 }
@@ -80,10 +85,11 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
 
 async function validateCredentials(credentials, db) {
     try {
-        // Perform actual validation logic here
-        // const user = await db.collection('users').findOne({ apiKey: credentials.apiKey });
-        // return !!user;
-        return true; // Replace this with actual validation logic
+        const sensor = await db.collection('sensors').findOne({ id: credentials.id });
+        if (!sensor) {
+            return false;
+        }
+        return true;
     } catch (error) {
         console.error('Error validating credentials:', error);
         return false;
@@ -93,6 +99,11 @@ async function validateCredentials(credentials, db) {
 async function handleSensorDisconnection(ws, activeSensors, db, logger, activeVisitors, activeUsers) {
     const idsToRemove = [...activeSensors.keys()].filter(id => activeSensors.get(id).ws === ws);
     idsToRemove.forEach(id => activeSensors.delete(id));
+
+    idsToRemove.forEach(async id => await db.collection('sensors').updateOne(
+        { id: id },  
+        { $set: { active: Date.now() } } 
+    ));
 
     await db.collection("stats").updateOne({}, { $set: { 'active.sensors': activeSensors.size } });
 
