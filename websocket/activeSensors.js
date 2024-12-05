@@ -85,8 +85,15 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
 
 async function validateCredentials(credentials, db) {
     try {
+        if(!credentials.id || !credentials.auth)
+        {
+            return false;
+        }
         const sensor = await db.collection('sensors').findOne({ id: credentials.id });
         if (!sensor) {
+            return false;
+        }
+        if(sensor.auth != credentials.auth){
             return false;
         }
         return true;
