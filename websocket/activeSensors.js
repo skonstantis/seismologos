@@ -3,7 +3,7 @@ const { broadcastNewSensorData } = require("./broadcasts/broadcastNewSensorData"
 
 module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db, logger) => {
     try {
-        const pingInterval = 10000;
+        const pingInterval = 5000;
         let disconnected = false;
 
         const pingSensor = setInterval(() => {
@@ -55,10 +55,10 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                 }
 
                 if (data.sensorData) {
-                    const { sensorData } = data;
+                    //const { sensorData } = data;
                     //await db.collection('sensors').insertOne(sensorData);
 
-                    broadcastNewSensorData(data, logger, activeUsers, activeVisitors);
+                    broadcastNewSensorData(data.data, logger, activeUsers, activeVisitors);
                 }
             } catch (error) {
                 logger.error('Error handling sensor data:', error);
