@@ -58,7 +58,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                     //const { sensorData } = data;
                     //await db.collection('sensors').insertOne(sensorData);
 
-                    broadcastNewSensorData(data.data, logger, activeUsers, activeVisitors);
+                    broadcastNewSensorData(data.credentials.id, data.data, logger, activeUsers, activeVisitors);
                 }
             } catch (error) {
                 logger.error('Error handling sensor data:', error);

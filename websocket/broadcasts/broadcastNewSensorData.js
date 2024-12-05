@@ -1,5 +1,5 @@
-const broadcastNewSensorData = (message, logger, activeUsers, activeVisitors) => {
-    const messageString = JSON.stringify(message); 
+const broadcastNewSensorData = (id, data, logger, activeUsers, activeVisitors) => {
+    const messageString = JSON.stringify({credentials: id, sensorData: data}); 
     for (const [username, connections] of activeUsers) {
         connections.forEach(({ ws }) => {
             if (ws && typeof ws.send === 'function') {
