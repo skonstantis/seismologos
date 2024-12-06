@@ -1,5 +1,5 @@
 const broadcastSensorConnection = (which, type, logger, activeUsers, activeVisitors) => {
-    const whichString = JSON.stringify(which); 
+    const whichString = JSON.stringify({ which: which, type: type });
     for (const [username, connections] of activeUsers) {
         connections.forEach(({ ws }) => {
             if (ws && typeof ws.send === 'function') {
