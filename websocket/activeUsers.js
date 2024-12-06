@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { broadcastStats } = require("./broadcasts/broadcastStats");
 const { broadcastActivity } = require("./broadcasts/broadcastActivity");
+const { broadcastSensorActivity } = require("./broadcasts/broadcastSensorActivity");
 
 module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
     const [path, query] = req.url.split("?");
@@ -40,6 +41,11 @@ module.exports = async (activeUsers, activeVisitors, ws, req, db, logger) => {
         broadcastStats(currentStats, logger, activeVisitors, activeUsers);
 
         broadcastActivity(logger, db, activeUsers, activeVisitors);
+
+        const userData = activeUsers.get(username);
+        const userDataMap = new Map();
+        userDataMap.set(username, userData);
+        broadcastSensorActivity(logger, db, userDataMap, new Map());
 
         ws.on("message", async (message) => {
         });

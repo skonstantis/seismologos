@@ -1,5 +1,6 @@
 const { broadcastStats } = require("./broadcasts/broadcastStats");
 const { broadcastActivity } = require("./broadcasts/broadcastActivity");
+const { broadcastSensorActivity } = require("./broadcasts/broadcastSensorActivity");
 
 module.exports = async (activeVisitors, activeUsers, ws, req, db, logger, visitorId) => {
     try {
@@ -14,6 +15,7 @@ module.exports = async (activeVisitors, activeUsers, ws, req, db, logger, visito
         const visitorDataMap = new Map();
         visitorDataMap.set(visitorId, visitorData);
         broadcastActivity(logger, db, new Map(), visitorDataMap);
+        broadcastSensorActivity(logger, db, new Map(), visitorDataMap);
 
 
         ws.on("message", (message) => {
