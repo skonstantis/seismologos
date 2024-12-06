@@ -23,12 +23,12 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
             try {
                 const data = JSON.parse(message);
 
-                if (data.message === 'Pong') {
+                if (data?.message === 'Pong') {
                     disconnected = false;
                     return;
                 }
 
-                if (!data.credentials) {
+                if (!data?.credentials) {
                     ws.send(JSON.stringify({ error: 'Missing credentials' }));
                     return;
                 }
@@ -57,7 +57,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                     activeSensors.get(credentials.id).lastActive = Date.now();
                 }
 
-                if (data.sensorData) {
+                if (data?.sensorData) {
                     const sanitizedData = {
                         ...data,
                         credentials: { id: data.credentials.id }, 
