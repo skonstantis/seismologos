@@ -1,5 +1,6 @@
 const { broadcastStats } = require("./broadcasts/broadcastStats");
 const { broadcastNewSensorData } = require("./broadcasts/broadcastNewSensorData");
+const { broadcastSensorConnection } = require("./broadcasts/broadcastSensorConnected");
 
 module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db, logger) => {
     try {
@@ -51,6 +52,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                     ws.send(JSON.stringify({ message: 'Credentials validated' }));
                     const currentStats = await db.collection("stats").findOne({});
                     broadcastStats(currentStats, logger, activeVisitors, activeUsers);
+                    broadcastSensorConnection(credentials.id, "con", logger, activeVisitors, activeUsers);
                 } else {
                     activeSensors.get(credentials.id).lastActive = Date.now();
                 }
@@ -62,20 +64,20 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                         timestamp: Date.now(), 
                     };
                     broadcastNewSensorData(sanitizedData, logger, activeUsers, activeVisitors);
+
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                    }
+            
+                    timeoutId = setTimeout(() => {
+                        const fallbackData = {
+                            credentials: { id: data.credentials.id },
+                            sensorData: { PGA: 0.00 },
+                            timestamp: Date.now(),
+                        };
+                        broadcastNewSensorData(fallbackData, logger, activeUsers, activeVisitors);
+                    }, 1000);
                 }      
-                
-                if (timeoutId) {
-                    clearTimeout(timeoutId);
-                }
-        
-                timeoutId = setTimeout(() => {
-                    const fallbackData = {
-                        credentials: { id: data.credentials.id },
-                        sensorData: { PGA: 0.00 },
-                        timestamp: Date.now(),
-                    };
-                    broadcastNewSensorData(fallbackData, logger, activeUsers, activeVisitors);
-                }, 2000);
             } catch (error) {
                 logger.error('Error handling sensor data:', error);
                 ws.send(JSON.stringify({ error: 'Error handling sensor data' }));
@@ -132,4 +134,5 @@ async function handleSensorDisconnection(ws, activeSensors, db, logger, activeVi
 
     const currentStats = await db.collection("stats").findOne({});
     broadcastStats(currentStats, logger, activeVisitors, activeUsers);
+    broadcastSensorConnection(credentials.id, "discon", logger, activeVisitors, activeUsers);
 }
