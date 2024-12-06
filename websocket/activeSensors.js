@@ -5,6 +5,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
     try {
         const pingInterval = 5000;
         let disconnected = false;
+        let timeoutId = null;
 
         const pingSensor = setInterval(() => {
             if (disconnected) {
@@ -55,11 +56,26 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                 }
 
                 if (data.sensorData) {
-                    //const { sensorData } = data;
-                    //await db.collection('sensors').insertOne(sensorData);
-
-                    broadcastNewSensorData(data, logger, activeUsers, activeVisitors);
+                    const sanitizedData = {
+                        ...data,
+                        credentials: { id: data.credentials.id }, 
+                        timestamp: Date().now(), 
+                    };
+                    broadcastNewSensorData(sanitizedData, logger, activeUsers, activeVisitors);
+                }      
+                
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
                 }
+        
+                timeoutId = setTimeout(() => {
+                    const fallbackData = {
+                        credentials: { id: data.credentials.id },
+                        sensorData: { PGA: 0.00 },
+                        timestamp: Date.now(),
+                    };
+                    broadcastNewSensorData(fallbackData, logger, activeUsers, activeVisitors);
+                }, 2000);
             } catch (error) {
                 logger.error('Error handling sensor data:', error);
                 ws.send(JSON.stringify({ error: 'Error handling sensor data' }));
