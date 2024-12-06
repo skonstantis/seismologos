@@ -1,9 +1,9 @@
 const broadcastSensorConnection = (which, type, logger, activeUsers, activeVisitors) => {
-    const whichString = JSON.stringify({ which: which, type: type });
+    const messageString = JSON.stringify({ sensorActivity: { which: which, type: type } });
     for (const [username, connections] of activeUsers) {
         connections.forEach(({ ws }) => {
             if (ws && typeof ws.send === 'function') {
-                ws.send(whichString);
+                ws.send(messageString);
             } else {
                 logger.error(`Invalid WebSocket for user ${username}`);
             }
@@ -11,7 +11,7 @@ const broadcastSensorConnection = (which, type, logger, activeUsers, activeVisit
     }
     for (const [visitorId, { ws }] of activeVisitors) {
         if (ws && typeof ws.send === 'function') {
-            ws.send(whichString);
+            ws.send(messageString);
         } else {
             logger.error(`Invalid WebSocket for visitor ${visitorId}`);
         }
