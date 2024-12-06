@@ -59,7 +59,7 @@ module.exports = async (activeVisitors, activeUsers, activeSensors, ws, req, db,
                     const sanitizedData = {
                         ...data,
                         credentials: { id: data.credentials.id }, 
-                        timestamp: Date().now(), 
+                        timestamp: Date.now(), 
                     };
                     broadcastNewSensorData(sanitizedData, logger, activeUsers, activeVisitors);
                 }      
