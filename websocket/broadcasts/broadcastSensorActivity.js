@@ -10,7 +10,8 @@ const broadcastSensorActivity = async (logger, db, activeUsers, activeVisitors) 
 
         for (const sensor of sensors) {
             const { id, active } = sensor;
-            messageWithSensorActivityStatus.sensorStatuses.push({ id, active });
+            const activeStatus = active === 0 ? true : false;
+            messageWithSensorActivityStatus.sensorStatuses.push({ id, active: activeStatus });
         }
     } catch (error) {
         logger.error("Error fetching sensors from database:", error);
