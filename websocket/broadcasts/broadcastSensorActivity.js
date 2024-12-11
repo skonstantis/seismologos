@@ -4,19 +4,16 @@ const broadcastSensorActivity = async (logger, db, activeUsers, activeVisitors) 
     };
 
     try {
-        const sensors = await db.collection('sensors').find({
-            'active': 0
-        }, {
-            projection: { 'id': 1 } 
+        const sensors = await db.collection('sensors').find({}, {
+            projection: { 'id': 1, 'active': 1 }
         }).toArray();
 
         for (const sensor of sensors) {
-                const id = sensor.id;
-                messageWithSensorActivityStatus.sensorStatuses.push({ id });
+            const { id, active } = sensor;
+            messageWithSensorActivityStatus.sensorStatuses.push({ id, active });
         }
-    }
-    catch (error) {
-        logger.error("Error fetching users from database:", error);
+    } catch (error) {
+        logger.error("Error fetching sensors from database:", error);
     }
 
     const messageString = JSON.stringify(messageWithSensorActivityStatus);
