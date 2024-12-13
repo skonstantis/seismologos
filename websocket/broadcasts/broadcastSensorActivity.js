@@ -5,13 +5,13 @@ const broadcastSensorActivity = async (logger, db, activeUsers, activeVisitors) 
 
     try {
         const sensors = await db.collection('sensors').find({}, {
-            projection: { 'id': 1, 'active': 1 }
+            projection: { 'id': 1, 'active': 1, 'lat': 1, 'lon': 1 }
         }).toArray();
 
         for (const sensor of sensors) {
-            const { id, active } = sensor;
+            const { id, active, lat, lon } = sensor;
             const activeStatus = active === 0 ? true : false;
-            messageWithSensorActivityStatus.sensorStatuses.push({ id, active: activeStatus });
+            messageWithSensorActivityStatus.sensorStatuses.push({ id, active: activeStatus, lat, lon });
         }
     } catch (error) {
         logger.error("Error fetching sensors from database:", error);
