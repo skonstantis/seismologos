@@ -99,7 +99,7 @@ module.exports = async (
               activeUsers,
               activeVisitors
             );
-          }, 1000);
+          }, 1500);
         }
       } catch (error) {
         logger.error("Error handling sensor data:", error);
